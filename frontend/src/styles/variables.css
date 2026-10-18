@@ -1,0 +1,131 @@
+/*
+ * variables.css —— 全部设计变量
+ * 来源:docs/design/ui-design-spec.md 第二、三、四节。
+ * 组件里只引用本文件的变量,禁止写死颜色与尺寸。
+ */
+
+:root {
+  /* ---------- 主色与语义色 ---------- */
+  --color-primary: #2f6fed;
+  --color-primary-light: #e8f0fe;
+  --color-success: #12a150;
+  --color-success-light: #e7f6ee;
+  --color-success-dark: #0b7a3b; /* 进度条 90%+ 使用的深绿 */
+  --color-danger: #e5484d;
+  --color-danger-light: #fdecec;
+  --color-warning: #f5a524;
+  --color-warning-light: #fdf3e2;
+  --color-info: #6b7280;
+
+  /* 主色之上的文字色与悬停态 */
+  --text-on-primary: #ffffff;
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 88%, black);
+
+  /* ---------- 中性色 ---------- */
+  --text-primary: #1a1d21;
+  --text-secondary: #5b6470;
+  --text-disabled: #9aa3ae;
+  --bg-page: #f5f6f8;
+  --bg-card: #ffffff;
+  --border-color: #e4e7ec;
+
+  /* ---------- 科目识别色(默认值,实际以 subject.color 为准) ---------- */
+  --subject-mayuan: #e5484d;
+  --subject-shigang: #f5a524;
+  --subject-xigai: #2f6fed;
+  --subject-english: #12a150;
+
+  /* ---------- 字体 ---------- */
+  --font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  --font-mono: 'SF Mono', Consolas, 'Courier New', monospace;
+
+  /* ---------- 字号 / 字重 / 行高(排版规范) ---------- */
+  /* 页面标题 */
+  --font-size-page-title: 20px;
+  --font-weight-page-title: 600;
+  --line-height-page-title: 1.4;
+  /* 卡片标题 */
+  --font-size-card-title: 16px;
+  --font-weight-card-title: 600;
+  --line-height-card-title: 1.5;
+  /* 题干(页面里最重要的一行) */
+  --font-size-stem: 17px;
+  --font-weight-stem: 400;
+  --line-height-stem: 1.75;
+  /* 选项文字 */
+  --font-size-option: 16px;
+  --font-weight-option: 400;
+  --line-height-option: 1.6;
+  /* 正文 / 说明 */
+  --font-size-body: 14px;
+  --font-weight-body: 400;
+  --line-height-body: 1.7;
+  /* 辅助文字 */
+  --font-size-aux: 12px;
+  --font-weight-aux: 400;
+  --line-height-aux: 1.5;
+  /* 大数字(统计) */
+  --font-size-stat: 32px;
+  --font-weight-stat: 700;
+  --line-height-stat: 1.2;
+
+  /* ---------- 间距(8px 基准栅格) ---------- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* ---------- 圆角 ---------- */
+  --radius-sm: 6px; /* 标签、小按钮 */
+  --radius-md: 10px; /* 卡片、输入框 */
+  --radius-lg: 16px; /* 底部弹层 */
+  --radius-full: 999px; /* 胶囊按钮、进度条 */
+
+  /* ---------- 布局常量 ---------- */
+  --page-padding: 16px; /* 页面左右内边距 */
+  --card-padding: 16px; /* 卡片内边距 */
+  --card-gap: 12px; /* 卡片间距 */
+  --content-max-desktop: 1280px; /* 桌面端内容区最大宽度(题库表格 9 列,960 会挤到操作按钮换行) */
+  --content-max-tablet: 720px; /* 平板端内容区最大宽度 */
+  --breakpoint-mobile: 768px;
+  --breakpoint-desktop: 1024px;
+  --tabbar-height: 56px;
+  --tap-target-min: 44px; /* 可点击元素最小尺寸 */
+
+  /* ---------- 阴影 ---------- */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-raised: 0 4px 12px rgba(16, 24, 40, 0.1);
+
+  /* ---------- 焦点环 ---------- */
+  --focus-ring: 0 0 0 2px var(--color-primary);
+}
+
+/* ---------- 暗色模式 ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #5b8def;
+    --color-primary-light: #1e2a44;
+    --color-success: #3fbf7f;
+    --color-success-light: #16281f;
+    --color-success-dark: #2f9a63;
+    --color-danger: #f0616a;
+    --color-danger-light: #2c1a1c;
+    --color-warning: #f7b955;
+    --color-warning-light: #2c2417;
+    --color-info: #9aa3ae;
+
+    --text-on-primary: #0e1117;
+    --color-primary-hover: color-mix(in srgb, var(--color-primary) 88%, white);
+
+    --text-primary: #f2f4f7;
+    --text-secondary: #aeb6c2;
+    --text-disabled: #6b7280;
+    --bg-page: #12141a;
+    --bg-card: #1c1f26;
+    --border-color: #2a2f38;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+}

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>自考学习中心 · 软件设计文档</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #1a1d21;
+    --ink-2: #3d444d;
+    --ink-3: #6b7280;
+    --line: #d8dde5;
+    --line-soft: #e8ecf1;
+    --bg: #f0f2f5;
+    --paper: #ffffff;
+    --accent: #2f6fed;
+    --accent-soft: #eef3fe;
+    --warn-soft: #fff8e8;
+    --warn-line: #f0c674;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 16px 64px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    font-size: 15px;
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+  .paper {
+    max-width: 820px;
+    margin: 0 auto;
+    background: var(--paper);
+    padding: 56px 64px 72px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(16,24,40,.08), 0 8px 24px rgba(16,24,40,.06);
+  }
+
+  /* ── 封面区 ── */
+  .doc-head { border-bottom: 3px solid var(--ink); padding-bottom: 20px; margin-bottom: 8px; }
+  .doc-head h1 { font-size: 27px; line-height: 1.35; margin: 0 0 14px; letter-spacing: .5px; }
+  .meta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 24px; font-size: 13.5px; color: var(--ink-2); }
+  .meta span b { color: var(--ink-3); font-weight: 400; margin-right: 6px; }
+  .doc-note {
+    margin: 22px 0 40px; padding: 14px 18px;
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    font-size: 13.5px; color: var(--ink-2); line-height: 1.75;
+  }
+
+  /* ── 标题层级 ── */
+  h2 {
+    font-size: 19px; margin: 44px 0 16px; padding-bottom: 9px;
+    border-bottom: 1px solid var(--line); letter-spacing: .3px;
+  }
+  h2 .num { color: var(--accent); margin-right: 10px; font-variant-numeric: tabular-nums; }
+  h3 { font-size: 16px; margin: 30px 0 12px; color: var(--ink); }
+  h4 { font-size: 14.5px; margin: 22px 0 10px; color: var(--ink-2); }
+  p { margin: 0 0 13px; }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  strong { font-weight: 600; }
+
+  /* ── 表格 ── */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 20px; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 8px 11px; text-align: left; vertical-align: top; line-height: 1.65; }
+  th { background: #f6f8fb; font-weight: 600; white-space: nowrap; }
+  td code, p code, li code {
+    font-family: "SF Mono", Consolas, "Courier New", monospace;
+    font-size: 12.5px; background: #f2f4f8; padding: 1px 5px; border-radius: 3px;
+    color: #b3306b;
+  }
+
+  /* ── 架构图 ── */
+  pre.diagram {
+    background: #f8fafc; border: 1px solid var(--line-soft); border-radius: 6px;
+    padding: 18px 20px; overflow-x: auto; font-size: 12.5px; line-height: 1.6;
+    font-family: "SF Mono", Consolas, "Courier New", monospace; color: var(--ink-2);
+    margin: 16px 0 22px;
+  }
+
+  /* ── 提示框 ── */
+  .callout {
+    padding: 14px 18px; margin: 18px 0; border-radius: 6px;
+    font-size: 13.5px; line-height: 1.75;
+    background: var(--warn-soft); border-left: 3px solid var(--warn-line);
+  }
+  .callout .t { font-weight: 600; display: block; margin-bottom: 5px; }
+
+  .end { margin-top: 52px; padding-top: 18px; border-top: 1px solid var(--line); text-align: center; color: var(--ink-3); font-size: 13px; }
+
+  @media print {
+    body { background: #fff; padding: 0; font-size: 12pt; }
+    .paper { box-shadow: none; border-radius: 0; padding: 0; max-width: none; }
+    h2 { page-break-after: avoid; }
+    table, pre.diagram { page-break-inside: avoid; }
+  }
+  @media (max-width: 640px) {
+    body { padding: 0; }
+    .paper { padding: 28px 20px 48px; }
+    .meta { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="paper">
+
+  <div class="doc-head">
+    <h1>自考学习中心 · 软件设计文档</h1>
+    <div class="meta">
+      <span><b>版本</b>v0.1</span>
+      <span><b>日期</b>2026-10-14</span>
+      <span><b>编制</b>项目发起人 / Claude</span>
+      <span><b>状态</b>待评审</span>
+    </div>
+  </div>
+
+  <div class="doc-note">
+    <strong>文档说明</strong> · 本文是「自考学习中心」的需求总结与技术选型记录,配套 13 份开发规格文档位于 <code>docs/</code> 目录,供 Claude Code 直接读取执行。技术细节与验收标准以 <code>docs/</code> 下的规格文件为准。
+  </div>
+
+  <h2><span class="num">1</span>项目概述</h2>
+
+  <h3>1.1 项目背景</h3>
+  <p>本项目源于发起人参加湖南省高等教育自学考试(软件工程本科)备考过程中的实际痛点。考生以碎片时间备考,面临三个具体困难:一是纸质真题无法随时随地使用,通勤、排队、午休这些零散时间难以利用;二是做过一遍的错题没有系统记录,反复在同一个知识点上出错;三是缺乏外部提醒机制,容易连续多日中断学习。</p>
+  <p>已有的商业备考工具面向大众用户,功能繁杂且无法容纳考生自己整理的真题,数据也不在本地。因此本项目定位为一套<strong>个人专用</strong>的备考系统。</p>
+
+  <h3>1.2 项目目标</h3>
+  <ol>
+    <li><strong>碎片可用</strong> —— 打开即做题,从启动到第一道题不超过两次点击。</li>
+    <li><strong>真题驱动</strong> —— 能把历年真题批量录入并结构化存储,按科目、章节、题型组织。</li>
+    <li><strong>复习自动化</strong> —— 用间隔重复算法自动安排错题的复习时间,考生只需完成当日任务。</li>
+    <li><strong>提醒可靠</strong> —— 每天定时推送带具体任务数量的系统通知,防止学习中断。</li>
+  </ol>
+
+  <h3>1.3 项目范围</h3>
+  <p><strong>包含</strong>:题库管理(录入、检索、编辑)、练习与判分、错题本与复习排期、学习数据统计、定时提醒推送、多端访问(手机 + 电脑)。</p>
+  <p><strong>不包含</strong>:多用户与账号体系、社交功能(排行榜、分享)、在线支付、视频课程、题目自动判分(主观题由考生自评)、移动端原生应用。</p>
+
+  <h3>1.4 术语约定</h3>
+  <table>
+    <thead><tr><th>术语</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td>科目</td><td>一门课程,如「马克思主义基本原理概论」,用课程代码标识</td></tr>
+      <tr><td>章节</td><td>科目下的知识单元</td></tr>
+      <tr><td>题型</td><td>题目的形式,分客观题与主观题两类</td></tr>
+      <tr><td>客观题</td><td>有唯一正确答案、可自动判分的题型(单选、多选、判断、英语各客观题型)</td></tr>
+      <tr><td>主观题</td><td>需要参考要点自评的题型(简答、论述、材料分析、写作)</td></tr>
+      <tr><td>练习场次</td><td>一次刷题过程,包含若干题目</td></tr>
+      <tr><td>复习队列</td><td>进入间隔重复排期的题目集合,即错题本</td></tr>
+      <tr><td>到期</td><td>按排期算法计算出「今天应该复习」</td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="num">2</span>需求分析</h2>
+
+  <h3>2.1 用户特征</h3>
+  <table>
+    <thead><tr><th>项目</th><th>描述</th></tr></thead>
+    <tbody>
+      <tr><td>用户数量</td><td>1 人,即考生本人</td></tr>
+      <tr><td>使用设备</td><td>安卓手机为主(刷题),电脑为辅(录题、看统计)</td></tr>
+      <tr><td>使用场景</td><td>通勤、排队、午休、睡前,单次 3—15 分钟</td></tr>
+      <tr><td>技术背景</td><td>软件工程专业在读,能自行启动和维护本机服务</td></tr>
+      <tr><td>备考目标</td><td>达到 60 分及格线</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.2 功能性需求</h3>
+
+  <h4>FR-1 科目与章节管理</h4>
+  <p>系统应支持维护科目信息(课程代码、名称、简称、标识色、考试日期与场次)和章节结构,科目数量在 4—20 门之间,章节支持两级。</p>
+
+  <h4>FR-2 题库录入</h4>
+  <p>系统应支持三种录入方式:单题表单录入、批量 JSON 导入、粘贴试卷文本自动解析。批量导入必须支持部分成功——单条校验失败时跳过该条并报告原因,不影响其余题目入库。</p>
+
+  <h4>FR-3 题库管理</h4>
+  <p>系统应支持按科目、章节、题型、年份筛选题目,支持题干关键词全文检索,支持题目的增删改查。</p>
+
+  <h4>FR-4 练习与判分</h4>
+  <p>系统应支持五种练习模式:每日任务、随机练习、章节专项、整卷模拟、错题复习。客观题由系统自动判分;主观题展示参考答案要点,由考生勾选自行评估得分。</p>
+
+  <h4>FR-5 错题与复习排期</h4>
+  <p>系统应把答错的题目以及「答对但没把握」的题目加入复习队列,按间隔重复算法计算下次复习时间,并在每日任务中优先安排到期题目。</p>
+
+  <h4>FR-6 学习统计</h4>
+  <p>系统应提供累计练习量、平均正确率、连续打卡天数、各科目正确率、章节掌握度、近 30 天趋势等统计数据。</p>
+
+  <h4>FR-7 定时提醒</h4>
+  <p>系统应在考生设定的时间通过系统通知推送提醒,通知内容必须包含当日具体任务量(如「今日 12 题待复习,其中《马原》5 题」)。系统还应提供可选的晚间提醒,在当天未学习时发送,且每天最多一次。</p>
+
+  <h4>FR-8 设置管理</h4>
+  <p>系统应允许考生配置每日任务题量、提醒开关与提醒时间、界面主题。</p>
+
+  <h3>2.3 非功能性需求</h3>
+  <table>
+    <thead><tr><th>类别</th><th>要求</th></tr></thead>
+    <tbody>
+      <tr><td>性能</td><td>页面首屏加载 ≤ 2 秒;提交答案响应 ≤ 500 毫秒;支持 5 万道题目的存储与检索</td></tr>
+      <tr><td>可用性</td><td>手机上从打开到第一道题不超过 2 次点击;单次任务可在 5 分钟内完成</td></tr>
+      <tr><td>可靠性</td><td>答题记录逐题即时保存,中途退出不丢进度;提交失败必须提示重试,不允许静默丢失</td></tr>
+      <tr><td>安全</td><td>系统仅在本机或局域网内运行,不暴露公网;不收集任何个人信息</td></tr>
+      <tr><td>兼容性</td><td>支持 Chrome 及基于 Chromium 的安卓浏览器;桌面端支持 Chrome 与 Edge</td></tr>
+      <tr><td>可维护性</td><td>文档驱动开发;代码结构按业务域划分;关键算法有单元测试</td></tr>
+      <tr><td>成本</td><td>零服务器成本,全部运行在考生自有设备上</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.4 约束条件</h3>
+  <ol>
+    <li><strong>发布渠道限制</strong>:系统不通过应用商店分发,直接在本机运行,因此无需处理软件著作权登记与备案。</li>
+    <li><strong>浏览器安全上下文限制</strong>:浏览器推送通知要求 HTTPS 或 localhost。手机通过局域网 HTTP 地址访问时无法注册通知,需通过内网穿透或证书解决。这是本项目最主要的技术风险。</li>
+    <li><strong>主观题判分限制</strong>:中文主观题无法可靠地自动判分,采用考生自评方案。</li>
+    <li><strong>开发资源限制</strong>:单人开发、业余时间进行,因此架构上刻意保持简单,不引入微服务、缓存中间件、消息队列等组件。</li>
+  </ol>
+
+  <h2><span class="num">3</span>技术选型</h2>
+
+  <h3>3.1 总体架构</h3>
+  <p>系统采用<strong>前后端分离</strong>的单体架构。前端为单页应用(SPA),后端为 Java 单体服务,数据库为关系型数据库。前端以渐进式 Web 应用(PWA)形式安装到手机主屏幕,以获得接近原生应用的使用体验与通知能力。</p>
+
+  <pre class="diagram">┌──────────────────────────────────────────────┐
+│  手机浏览器 / 电脑浏览器                       │
+│  Vue 3 SPA（PWA，可安装到主屏幕）              │
+│  ┌────────────────────────────────────────┐  │
+│  │ Service Worker —— 接收推送、离线缓存    │  │
+│  └────────────────────────────────────────┘  │
+└───────────────────┬──────────────────────────┘
+                    │ HTTP / JSON (REST)
+┌───────────────────▼──────────────────────────┐
+│  Spring Boot 单体服务（:8080）                │
+│  控制器层 → 服务层 → 持久层                    │
+│  定时任务：每分钟检查并触发提醒推送            │
+│  生产环境同时托管前端静态资源                  │
+└───────────────────┬──────────────────────────┘
+                    │ JDBC
+┌───────────────────▼──────────────────────────┐
+│  MySQL 8（utf8mb4）                          │
+└──────────────────────────────────────────────┘</pre>
+
+  <h3>3.2 前端技术选型</h3>
+  <table>
+    <thead><tr><th>技术</th><th>选型</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>框架</td><td>Vue 3</td><td>组合式 API 学习曲线平缓;单文件组件适合单人维护</td></tr>
+      <tr><td>构建工具</td><td>Vite 5</td><td>开发服务器启动快,热更新体验好</td></tr>
+      <tr><td>语言</td><td>TypeScript 5</td><td>前后端字段在编译期校验,避免接口不一致导致运行时报错</td></tr>
+      <tr><td>路由</td><td>Vue Router 4</td><td>官方方案</td></tr>
+      <tr><td>状态管理</td><td>Pinia 2</td><td>官方推荐,API 比 Vuex 简洁</td></tr>
+      <tr><td>UI 组件库</td><td>Element Plus</td><td>组件齐全、中文文档完善,降低界面开发成本</td></tr>
+      <tr><td>HTTP 客户端</td><td>Axios</td><td>生态成熟,拦截器机制便于统一处理错误</td></tr>
+      <tr><td>PWA</td><td>vite-plugin-pwa</td><td>支持安装到主屏幕与自定义 Service Worker</td></tr>
+      <tr><td>图表</td><td>ECharts</td><td>按需引入后体积可控,图表类型齐全</td></tr>
+    </tbody>
+  </table>
+  <p><strong>未选用的方案及原因</strong>:React(学习成本更高,对本项目无额外收益)、Tailwind CSS(与组件库样式体系冲突)、Nuxt(不需要服务端渲染)。</p>
+
+  <h3>3.3 后端技术选型</h3>
+  <table>
+    <thead><tr><th>技术</th><th>选型</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>语言</td><td>Java 17 (LTS)</td><td>开发者主技术栈,可直接复用既有知识</td></tr>
+      <tr><td>框架</td><td>Spring Boot 3.2</td><td>企业主流,生态完整,本项目本身可作为工程实践素材</td></tr>
+      <tr><td>Web 层</td><td>Spring Web MVC</td><td>与 Boot 集成</td></tr>
+      <tr><td>持久层</td><td>Spring Data JPA</td><td>本项目查询以筛选与分页为主,可大幅减少模板代码</td></tr>
+      <tr><td>数据库迁移</td><td>Flyway</td><td>版本化建表脚本,可追溯、可回滚,优于 Hibernate 自动建表</td></tr>
+      <tr><td>参数校验</td><td>Spring Validation</td><td>声明式校验,减少手写判断</td></tr>
+      <tr><td>定时任务</td><td>Spring @Scheduled</td><td>内置能力,满足每分钟检查提醒的需求</td></tr>
+      <tr><td>推送</td><td>Web Push (VAPID)</td><td>标准协议,配合 Service Worker 实现系统级通知</td></tr>
+      <tr><td>接口文档</td><td>springdoc-openapi</td><td>自动生成 OpenAPI 描述,供前端生成 TypeScript 类型</td></tr>
+      <tr><td>构建</td><td>Maven</td><td>Java 生态默认选择</td></tr>
+    </tbody>
+  </table>
+  <p><strong>未选用的方案及原因</strong>:Node.js 或 Python 后端(与开发者主栈不一致,学习收益低)、MyBatis(本项目 SQL 复杂度低,无明显优势)、微服务架构(单机应用拆微服务属于过度设计)、Redis(数据量在万级以内,直接查询数据库足够)。</p>
+
+  <h3>3.4 数据库选型</h3>
+  <table>
+    <thead><tr><th>技术</th><th>选型</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>数据库</td><td>MySQL 8.0</td><td>与 Spring Boot 组合最成熟,资料丰富,对硬件要求低</td></tr>
+      <tr><td>字符集</td><td>utf8mb4 / utf8mb4_unicode_ci</td><td>正确存储中文与生僻字</td></tr>
+      <tr><td>引擎</td><td>InnoDB</td><td>支持事务与外键,保证答题记录的一致性</td></tr>
+    </tbody>
+  </table>
+  <p><strong>未选用的方案及原因</strong>:SQLite(更轻量但报表 SQL 能力受限)、PostgreSQL(技术上更优但对本项目无决定性优势)。</p>
+  <p><strong>特殊设计</strong>:题目选项与主观题参考答案要点采用 JSON 类型存储。原因是不同题型的选项结构差异较大,拆分为独立的选项表会使录入与查询都更复杂,而本项目不需要对选项做 SQL 层面的条件筛选。</p>
+
+  <h3>3.5 关键技术方案:提醒推送</h3>
+  <p>提醒是本项目的核心需求,也是技术选型中最需要论证的部分。方案如下:</p>
+  <pre class="diagram">1. Spring Boot 定时任务每分钟执行一次
+2. 检查当前时间是否等于用户设定的提醒时间（允许 ±1 分钟误差）
+3. 查询当日到期复习题数量，若为 0 则不推送
+4. 通过 Web Push 协议（VAPID 密钥对）向该用户的浏览器订阅端点发送消息
+5. 手机端 Service Worker 接收消息，调用系统通知接口弹出通知
+6. 用户点击通知，跳转到复习页面
+7. 写入推送日志，保证同类提醒每天只发一次</pre>
+
+  <div class="callout">
+    <span class="t">为什么不用微信小程序</span>
+    小程序无法在用户未交互的情况下主动推送消息,而本项目的提醒是每日固定时间的主动推送,需求不匹配。这是本项目在早期技术选型中排除小程序方案的决定性原因。
+  </div>
+
+  <div class="callout">
+    <span class="t">已知风险</span>
+    浏览器推送要求安全上下文(HTTPS 或 localhost)。手机通过局域网 HTTP 地址访问时无法使用通知功能。应对方案为内网穿透或自签名证书。
+  </div>
+
+  <h2><span class="num">4</span>数据模型设计</h2>
+
+  <h3>4.1 实体清单</h3>
+  <table>
+    <thead><tr><th>实体</th><th>说明</th><th>关键字段</th></tr></thead>
+    <tbody>
+      <tr><td>用户</td><td>单用户系统,仅一条记录</td><td>昵称</td></tr>
+      <tr><td>科目</td><td>一门课程</td><td>课程代码、名称、简称、标识色、考试日期、考试场次</td></tr>
+      <tr><td>章节</td><td>科目下的知识单元</td><td>名称、父章节、排序</td></tr>
+      <tr><td>题目</td><td>核心实体</td><td>题型、题干、选项、答案、参考答案要点、解析、来源、分值</td></tr>
+      <tr><td>试卷</td><td>一套完整真题或模拟卷</td><td>名称、类型、年份、总分、时长</td></tr>
+      <tr><td>试卷题目</td><td>试卷与题目的关联</td><td>大题名、顺序</td></tr>
+      <tr><td>练习场次</td><td>一次刷题</td><td>模式、状态、题量、答对数、得分、用时</td></tr>
+      <tr><td>作答记录</td><td>单题作答</td><td>用户答案、把握程度、是否正确、自评得分、用时</td></tr>
+      <tr><td>复习队列</td><td>错题本与排期</td><td>复习阶段、间隔天数、难度系数、错误次数、下次复习时间、掌握状态</td></tr>
+      <tr><td>学习日志</td><td>每日汇总</td><td>日期、题量、答对数、学习时长</td></tr>
+      <tr><td>用户设置</td><td>单行配置</td><td>每日题量、提醒开关与时间</td></tr>
+      <tr><td>推送订阅</td><td>浏览器推送端点</td><td>端点地址、密钥、设备标识</td></tr>
+      <tr><td>推送日志</td><td>防重复推送</td><td>日期、类型、发送结果</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 主要关系</h3>
+  <p>科目与章节为一对多;章节与题目为一对多;科目与题目为一对多;试卷与题目为多对多(通过试卷题目表);练习场次与作答记录为一对多;题目与复习队列为一对一。</p>
+
+  <h3>4.3 关键设计决策</h3>
+  <p><strong>复习队列独立成表。</strong>错题信息不放在题目表上,因为复习状态属于「学习者与题目的关系」,而非题目本身的属性。这样设计也让「将来若变为多用户」时无需改造题目表。</p>
+  <p><strong>作答记录保存把握程度。</strong>除对错外,额外记录考生作答时是否自信。这使复习排期能区分「真会」与「蒙对」,显著提升复习效率。</p>
+  <p><strong>唯一索引保证幂等。</strong>作答记录表在「练习场次 + 题目」上建立唯一索引,确保同一场次内同一道题只能作答一次,使重复提交安全。</p>
+  <p><strong>全文索引使用 ngram 解析器。</strong>MySQL 默认全文解析器不支持中文分词,题干检索必须使用 ngram 解析器,否则中文关键词无法命中。</p>
+
+  <h2><span class="num">5</span>功能模块设计</h2>
+
+  <h3>5.1 模块划分</h3>
+  <table>
+    <thead><tr><th>模块</th><th>主要功能</th></tr></thead>
+    <tbody>
+      <tr><td>科目管理</td><td>科目与章节的增删改查</td></tr>
+      <tr><td>题库管理</td><td>题目增删改查、筛选检索、批量导入、文本解析</td></tr>
+      <tr><td>练习模块</td><td>五种模式的组题、作答、判分、进度保存</td></tr>
+      <tr><td>复习模块</td><td>错题入队、间隔重复排期、到期查询、掌握度管理</td></tr>
+      <tr><td>统计模块</td><td>累计数据、正确率、连续天数、趋势、章节掌握度</td></tr>
+      <tr><td>提醒模块</td><td>提醒配置、定时检查、通知推送、推送日志</td></tr>
+      <tr><td>设置模块</td><td>学习参数、提醒参数、主题</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.2 核心算法:间隔重复排期</h3>
+  <p>排期采用简化的 SM-2 算法。每道进入复习队列的题目维护三个参数:复习阶段(整数,初始为 0)、间隔天数(初始为 1)、难度系数(初始为 2.5)。</p>
+  <table>
+    <thead><tr><th>作答结果</th><th>排期调整</th></tr></thead>
+    <tbody>
+      <tr><td>答错</td><td>阶段归零,间隔重置为 1 天,难度系数减 0.2(下限 1.30)</td></tr>
+      <tr><td>答对但没把握</td><td>阶段不变,间隔重置为 1 天</td></tr>
+      <tr><td>答对且确定</td><td>阶段加一,间隔 = 上一间隔 × 难度系数;连续答对 4 次后标记为已掌握,移出队列</td></tr>
+    </tbody>
+  </table>
+  <p>间隔天数上限设为 60 天,避免出现长期不再复习的情况。</p>
+
+  <h3>5.3 核心流程:每日学习</h3>
+  <ol>
+    <li>考生在设定时间收到通知:「今日 12 题待复习,其中《马原》5 题,《英语》7 题」。</li>
+    <li>点击通知进入应用,首页显示今日主任务按钮。</li>
+    <li>点击开始,系统优先抽取到期复习题,不足部分用新题补足至设定的每日题量。</li>
+    <li>逐题作答,每答一题立即保存。</li>
+    <li>客观题即时判定并展示解析;主观题展示参考答案要点,由考生勾选自评。</li>
+    <li>练习结束展示本轮成绩,系统更新复习队列与当日学习日志。</li>
+    <li>若当天未学习,晚间提醒再次推送一次(每天最多一次)。</li>
+  </ol>
+
+  <h2><span class="num">6</span>界面设计</h2>
+  <p>界面设计遵循三条原则:一屏一件事(每页只回答一个问题)、三秒可开始(打开到第一道题不超过两次点击)、数字即反馈(用数据而非徽章激励)。</p>
+  <p>主要页面包括:今日首页、刷题页、本轮小结、题库管理、题目编辑、批量导入、错题本、数据看板、科目管理、设置与提醒。</p>
+  <p>完整的配色方案、字体规范、组件规格、响应式断点与交互细节,见配套文档《UI 设计规范》(<code>docs/design/ui-design-spec.md</code>)。</p>
+
+  <h2><span class="num">7</span>开发计划</h2>
+  <table>
+    <thead><tr><th>阶段</th><th>内容</th><th>主要交付物</th></tr></thead>
+    <tbody>
+      <tr><td>阶段 0</td><td>前后端工程骨架</td><td>可启动的空应用、统一响应与错误处理、布局切换</td></tr>
+      <tr><td>阶段 1</td><td>科目与章节</td><td>科目章节管理、今日页骨架</td></tr>
+      <tr><td>阶段 2</td><td>题库核心</td><td>题目增删改查、筛选检索</td></tr>
+      <tr><td>阶段 3</td><td>批量导入</td><td>JSON 导入、预览校验、容错报告</td></tr>
+      <tr><td>阶段 4</td><td>练习与判分</td><td>五种练习模式、答题状态机、成绩汇总</td></tr>
+      <tr><td>阶段 5</td><td>复习排期</td><td>间隔重复算法、错题本</td></tr>
+      <tr><td>阶段 6</td><td>统计看板</td><td>五项统计接口与图表</td></tr>
+      <tr><td>阶段 7</td><td>定时提醒</td><td>Web Push 订阅、定时任务、通知处理</td></tr>
+      <tr><td>阶段 8</td><td>打包部署</td><td>静态资源托管、PWA 实测、HTTPS 方案</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">
+    <span class="t">实施建议</span>
+    阶段 1 至 3 完成后即可开始录入真题,不必等待全部功能完成。题库是整个系统的地基,越早开始积累数据,后续功能的价值越高。
+  </div>
+
+  <h2><span class="num">8</span>风险与对策</h2>
+  <table>
+    <thead><tr><th>风险</th><th>影响</th><th>对策</th></tr></thead>
+    <tbody>
+      <tr><td>浏览器推送要求 HTTPS,局域网 HTTP 环境无法注册通知</td><td>提醒刚需无法实现</td><td>采用内网穿透或自签名证书;开发期在桌面端 localhost 验证推送链路</td></tr>
+      <tr><td>国产手机系统的浏览器/系统会限制后台通知</td><td>通知收不到</td><td>引导用户将应用添加到主屏幕、在系统设置中允许通知;提供通知状态自检页面</td></tr>
+      <tr><td>主观题自评尺度不一致</td><td>统计数据失真</td><td>正确率统计仅计入客观题,主观题单独统计自评得分</td></tr>
+      <tr><td>真题录入工作量大</td><td>项目推进受阻</td><td>优先实现批量导入;题目格式规范化后可由工具批量生成</td></tr>
+      <tr><td>单人开发时间有限</td><td>项目中断</td><td>分阶段交付,每阶段独立可用;优先级上题库先于练习</td></tr>
+      <tr><td>间隔重复算法参数不当</td><td>复习节奏不合理</td><td>算法逻辑编写单元测试;参数在文档中明确并可配置</td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="num">9</span>附录</h2>
+
+  <h3>9.1 配套文档清单</h3>
+  <table>
+    <thead><tr><th>文档</th><th>位置</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>文档索引</td><td>docs/README.md</td><td>全部文档的导航与约定</td></tr>
+      <tr><td>技术选型</td><td>docs/design/tech-stack.md</td><td>选型理由与排除方案</td></tr>
+      <tr><td>UI 设计规范</td><td>docs/design/ui-design-spec.md</td><td>配色、字体、组件、布局</td></tr>
+      <tr><td>后端索引</td><td>docs/study-exam/backend/README.md</td><td>后端文档导航</td></tr>
+      <tr><td>后端架构</td><td>docs/study-exam/backend/01-architecture.md</td><td>工程结构、分层、核心设计</td></tr>
+      <tr><td>数据库设计</td><td>docs/study-exam/backend/02-data-model.md</td><td>全部建表语句</td></tr>
+      <tr><td>接口规范</td><td>docs/study-exam/backend/03-api-spec.md</td><td>REST 接口与导入格式</td></tr>
+      <tr><td>后端功能清单</td><td>docs/study-exam/backend/04-features.md</td><td>分阶段实现与验收标准</td></tr>
+      <tr><td>前端索引</td><td>docs/study-exam/frontend/README.md</td><td>前端文档导航</td></tr>
+      <tr><td>前端架构</td><td>docs/study-exam/frontend/01-architecture.md</td><td>工程结构、PWA、推送</td></tr>
+      <tr><td>路由与页面</td><td>docs/study-exam/frontend/02-routes-and-pages.md</td><td>页面清单与交互</td></tr>
+      <tr><td>状态与接口</td><td>docs/study-exam/frontend/03-state-and-api.md</td><td>Store 与数据流</td></tr>
+      <tr><td>前端功能清单</td><td>docs/study-exam/frontend/04-features.md</td><td>分阶段实现与验收标准</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9.2 备考背景资料</h3>
+  <p>本项目服务于湖南省高等教育自学考试。已确认的考试安排:2026 年 10 月考试于 10 月 24 日至 25 日举行,上午场 9:00—11:30,下午场 14:30—17:00。四门应试科目的题型结构如下:</p>
+  <table>
+    <thead><tr><th>科目</th><th>课程代码</th><th>试卷结构</th></tr></thead>
+    <tbody>
+      <tr><td>马克思主义基本原理概论</td><td>03709</td><td>单选 25×2 分 = 50 分;简答 5×6 分 = 30 分;论述 3 选 2×10 分 = 20 分</td></tr>
+      <tr><td>中国近现代史纲要</td><td>03708</td><td>单选 25×2 分 = 50 分;简答 5×6 分 = 30 分;论述 3 选 2×10 分 = 20 分</td></tr>
+      <tr><td>习近平新时代中国特色社会主义思想概论</td><td>15040</td><td>单选 25×2 分 = 50 分;简答 4 题约 40 分;材料分析 1×10 分 = 10 分</td></tr>
+      <tr><td>英语(专升本)</td><td>13000</td><td>阅读判断 10 分、阅读选择 10 分、概括段落大意和补全句子 10 分、填句补文 10 分、填词补文 15 分、完形补文 15 分、短文写作 30 分</td></tr>
+    </tbody>
+  </table>
+
+  <div class="end">— 文档结束 —</div>
+</div>
+</body>
+</html>

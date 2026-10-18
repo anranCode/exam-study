@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    # characterEncoding 必须是 Java 字符集名(UTF-8),不能写 MySQL 的 utf8mb4 —— 驱动会报
+    # "Unsupported character encoding 'utf8mb4'"。服务端字符集仍由建库时的 utf8mb4 决定。
+    url: jdbc:mysql://localhost:3306/study_exam?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    username: ${DB_USERNAME:root}
+    # 默认值是本机开发库的口令;换机器/改密码时用环境变量覆盖,不必改这个文件
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000
+
+logging:
+  level:
+    com.studyexam: DEBUG
+    # 想看实际执行的 SQL 和绑定参数时,把下面两行放开;平时关掉,日志才读得下去
+    org.hibernate.SQL: INFO
+    org.hibernate.orm.jdbc.bind: INFO

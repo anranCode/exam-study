@@ -1,0 +1,41 @@
+{
+  "subjectCode": "03709",
+  "paper": {
+    "name": "示例卷(用于接口自测)",
+    "type": "MOCK",
+    "year": 2024,
+    "totalScore": 100,
+    "durationMin": 150
+  },
+  "items": [
+    {
+      "sectionName": "一、单项选择题",
+      "type": "SINGLE_CHOICE",
+      "chapterName": "第一章 物质世界及其发展规律",
+      "stem": "马克思主义哲学的基本问题是（  ）",
+      "options": [
+        { "key": "A", "text": "物质和意识的关系问题" },
+        { "key": "B", "text": "思维和存在的关系问题" },
+        { "key": "C", "text": "世界的本原问题" },
+        { "key": "D", "text": "世界是否可知的问题" }
+      ],
+      "answer": "B",
+      "analysis": "恩格斯指出,全部哲学,特别是近代哲学的重大的基本问题,是思维和存在的关系问题。",
+      "score": 2.0,
+      "difficulty": 1
+    },
+    {
+      "sectionName": "二、简答题",
+      "type": "SHORT_ANSWER",
+      "chapterName": "第三章 人类社会及其发展规律",
+      "stem": "简述生产力与生产关系的辩证关系。",
+      "answerPoints": [
+        "生产力决定生产关系,生产力状况决定生产关系的性质和变化",
+        "生产关系反作用于生产力,适合时促进发展,不适合时阻碍发展",
+        "生产关系一定要适合生产力状况是社会发展的基本规律"
+      ],
+      "score": 6.0,
+      "difficulty": 2
+    }
+  ]
+}

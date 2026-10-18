@@ -1,0 +1,28 @@
+# 构建产物
+target/
+dist/
+node_modules/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# 日志与临时文件
+*.log
+logs/
+*.tmp
+
+# 环境与密钥——绝不要提交
+.env
+.env.local
+.env.*.local
+application-local.yml
+application-prod.yml
+# Claude Code 的本地设置:里面是这台机器的绝对路径和本地命令(含数据库口令)
+.claude/settings.local.json
+
+# 操作系统
+.DS_Store
+Thumbs.db

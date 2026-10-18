@@ -1,0 +1,170 @@
+/*
+ * element-override.css —— 把 Element Plus 的默认主题映射到本项目设计变量。
+ * 必须在 element-plus/dist/index.css 之后加载。
+ */
+
+:root {
+  /* 主色 */
+  --el-color-primary: var(--color-primary);
+  --el-color-primary-light-3: color-mix(in srgb, var(--color-primary) 70%, var(--bg-card));
+  --el-color-primary-light-5: color-mix(in srgb, var(--color-primary) 50%, var(--bg-card));
+  --el-color-primary-light-7: color-mix(in srgb, var(--color-primary) 30%, var(--bg-card));
+  --el-color-primary-light-8: color-mix(in srgb, var(--color-primary) 20%, var(--bg-card));
+  --el-color-primary-light-9: var(--color-primary-light);
+  --el-color-primary-dark-2: color-mix(in srgb, var(--color-primary) 80%, black);
+
+  /* 语义色 */
+  --el-color-success: var(--color-success);
+  --el-color-success-light-3: color-mix(in srgb, var(--color-success) 70%, var(--bg-card));
+  --el-color-success-light-5: color-mix(in srgb, var(--color-success) 50%, var(--bg-card));
+  --el-color-success-light-7: color-mix(in srgb, var(--color-success) 30%, var(--bg-card));
+  --el-color-success-light-8: color-mix(in srgb, var(--color-success) 20%, var(--bg-card));
+  --el-color-success-light-9: var(--color-success-light);
+
+  --el-color-danger: var(--color-danger);
+  --el-color-danger-light-3: color-mix(in srgb, var(--color-danger) 70%, var(--bg-card));
+  --el-color-danger-light-5: color-mix(in srgb, var(--color-danger) 50%, var(--bg-card));
+  --el-color-danger-light-7: color-mix(in srgb, var(--color-danger) 30%, var(--bg-card));
+  --el-color-danger-light-8: color-mix(in srgb, var(--color-danger) 20%, var(--bg-card));
+  --el-color-danger-light-9: var(--color-danger-light);
+
+  --el-color-error: var(--color-danger);
+  --el-color-error-light-3: color-mix(in srgb, var(--color-danger) 70%, var(--bg-card));
+  --el-color-error-light-5: color-mix(in srgb, var(--color-danger) 50%, var(--bg-card));
+  --el-color-error-light-7: color-mix(in srgb, var(--color-danger) 30%, var(--bg-card));
+  --el-color-error-light-8: color-mix(in srgb, var(--color-danger) 20%, var(--bg-card));
+  --el-color-error-light-9: var(--color-danger-light);
+
+  --el-color-warning: var(--color-warning);
+  --el-color-warning-light-3: color-mix(in srgb, var(--color-warning) 70%, var(--bg-card));
+  --el-color-warning-light-5: color-mix(in srgb, var(--color-warning) 50%, var(--bg-card));
+  --el-color-warning-light-7: color-mix(in srgb, var(--color-warning) 30%, var(--bg-card));
+  --el-color-warning-light-8: color-mix(in srgb, var(--color-warning) 20%, var(--bg-card));
+  --el-color-warning-light-9: var(--color-warning-light);
+
+  --el-color-info: var(--color-info);
+  --el-color-info-light-3: color-mix(in srgb, var(--color-info) 70%, var(--bg-card));
+  --el-color-info-light-5: color-mix(in srgb, var(--color-info) 50%, var(--bg-card));
+  --el-color-info-light-7: color-mix(in srgb, var(--color-info) 30%, var(--bg-card));
+  --el-color-info-light-8: color-mix(in srgb, var(--color-info) 20%, var(--bg-card));
+  --el-color-info-light-9: color-mix(in srgb, var(--color-info) 10%, var(--bg-card));
+
+  /* 文本 / 背景 / 边框 */
+  --el-text-color-primary: var(--text-primary);
+  --el-text-color-regular: var(--text-secondary);
+  --el-text-color-secondary: var(--text-secondary);
+  --el-text-color-placeholder: var(--text-disabled);
+  --el-text-color-disabled: var(--text-disabled);
+  --el-text-color-primary-disabled: var(--text-disabled);
+
+  --el-bg-color: var(--bg-card);
+  --el-bg-color-page: var(--bg-page);
+  --el-bg-color-overlay: var(--bg-card);
+  --el-fill-color-blank: var(--bg-card);
+
+  --el-border-color: var(--border-color);
+  --el-border-color-light: var(--border-color);
+  --el-border-color-lighter: var(--border-color);
+  --el-border-color-extra-light: var(--border-color);
+  --el-border-color-hover: var(--color-primary);
+
+  /* 字体 / 圆角 */
+  --el-font-family: var(--font-family);
+  --el-border-radius-base: var(--radius-sm);
+  --el-border-radius-small: var(--radius-sm);
+  --el-border-radius-round: var(--radius-full);
+  --el-font-size-base: var(--font-size-body);
+}
+
+/* 表格 / 卡片贴合设计变量 */
+.el-card {
+  --el-card-border-radius: var(--radius-md);
+  border-color: var(--border-color);
+}
+
+.el-table {
+  --el-table-border-color: var(--border-color);
+  --el-table-header-bg-color: var(--bg-page);
+  --el-table-header-text-color: var(--text-secondary);
+  --el-table-text-color: var(--text-primary);
+}
+
+/* ---------- 无障碍:所有可点击控件最小 44×44 ---------- */
+.el-button {
+  min-height: var(--tap-target-min);
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper,
+.el-input-number {
+  min-height: var(--tap-target-min);
+}
+
+.el-color-picker__trigger {
+  width: var(--tap-target-min);
+  height: var(--tap-target-min);
+}
+
+/*
+ * ---------- 暗色模式 ----------
+ *
+ * 本项目的暗色是**只覆盖自己那套设计变量**实现的(见 variables.css 的
+ * @media (prefers-color-scheme: dark)),并没有引入 Element Plus 的暗色主题,
+ * 所以 EP 内部那些没被上面映射过的变量仍然是浅色默认值。
+ *
+ * 后果最明显的一处:表格悬停行用 --el-table-row-hover-bg-color → --el-fill-color-light
+ * (#f5f7fa 近白),而题干文字用的是 --text-primary(暗色下 #f2f4f7 近白)——
+ * 白字白底,鼠标一悬停题干就看不见了。
+ *
+ * 这里把 fill-color 家族补上。原则:暗色下用「比卡片底色略亮」表示 hover,
+ * 而不是把浅色那套近白直接搬过来。用 color-mix 跟卡片底色挂钩,深浅两套都自洽。
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --el-fill-color-extra-light: color-mix(in srgb, var(--bg-card) 97%, white);
+    --el-fill-color-lighter: color-mix(in srgb, var(--bg-card) 95%, white);
+    /* 悬停行背景:比卡片亮一点就够 */
+    --el-fill-color-light: color-mix(in srgb, var(--bg-card) 92%, white);
+    --el-fill-color: color-mix(in srgb, var(--bg-card) 88%, white);
+    --el-fill-color-dark: color-mix(in srgb, var(--bg-card) 84%, white);
+    --el-fill-color-darker: color-mix(in srgb, var(--bg-card) 80%, white);
+
+    /* 单独再写一道:它就是本次的元凶,不想让它再被别的声明带偏 */
+    --el-table-row-hover-bg-color: var(--el-fill-color-light);
+
+    /* loading 遮罩:EP 默认是白色半透明,暗色下会糊成一片白 */
+    --el-mask-color: rgba(18, 20, 26, 0.8);
+    --el-mask-color-extra-light: rgba(18, 20, 26, 0.3);
+
+    /* 只映射了 -light/-lighter/-extra-light,这两个还是浅色默认 */
+    --el-border-color-dark: color-mix(in srgb, var(--border-color) 60%, white);
+    --el-border-color-darker: color-mix(in srgb, var(--border-color) 45%, white);
+
+    /* 阴影:EP 默认是黑色系,在这种暗底上等于没有,加重一点 */
+    --el-box-shadow: 0 12px 32px 4px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.55);
+    --el-box-shadow-light: 0 0 12px rgba(0, 0, 0, 0.55);
+    --el-box-shadow-lighter: 0 0 12px rgba(0, 0, 0, 0.45);
+    --el-box-shadow-dark: 0 16px 48px 16px rgba(0, 0, 0, 0.55),
+      0 12px 32px rgba(0, 0, 0, 0.55), 0 8px 16px -8px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/*
+ * ---------- 手机端触控区 ----------
+ *
+ * 本项目的无障碍规则是「可点元素 ≥ 44px」,输入框都做到了,但开关(40×32)
+ * 和时间选择器(高 32)是 Element Plus 自带的尺寸,没被上面的规则覆盖到。
+ * 只在手机宽度放大,桌面端保持组件原本的尺寸。
+ */
+@media (max-width: 767.98px) {
+  .el-switch {
+    min-height: var(--tap-target-min);
+  }
+
+  .el-date-editor.el-input,
+  .el-date-editor.el-input__wrapper,
+  .el-date-editor .el-input__wrapper {
+    min-height: var(--tap-target-min);
+  }
+}

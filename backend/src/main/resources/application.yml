@@ -1,0 +1,86 @@
+spring:
+  application:
+    name: study-exam
+  profiles:
+    active: dev
+  jpa:
+    hibernate:
+      ddl-auto: validate        # 只校验,绝不改表
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Shanghai
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: always
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+server:
+  port: 8080
+  error:
+    whitelabel:
+      enabled: false          # 未知路径返回统一格式,不返回 Whitelabel 页面
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health       # 仅暴露 health,不暴露其他 actuator 端点
+  endpoint:
+    health:
+      show-details: never
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+study-exam:
+  # 前端构建产物上线时拷进 static/,开发期由 Vite(:5173)承担
+  cors:
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
+  notify:
+    channel: WECOM                        # WECOM 企业微信群机器人 / SERVERCHAN Server酱
+    wecom-webhook: ${WECOM_WEBHOOK_URL:}  # 也可在设置页填写,写入 user_setting.notify_webhook
+    serverchan-key: ${SERVERCHAN_KEY:}    # 通道为 SERVERCHAN 时用
+    app-base-url: http://localhost:8080   # 提醒里的跳转链接前缀,上线改为 http://<服务器IP>:8080
+    timeout-seconds: 10
+  # ── 通义千问 DashScope(OpenAI 兼容接口)────────────────────────────────
+  # 复用已有的千问 TokenPlan,按 OpenAI 兼容协议调用,不引重型 SDK。
+  # 获取方式:阿里云百炼(DashScope)控制台 → API-KEY 管理 → 创建/查看
+  #   https://bailian.console.aliyun.com/  →  API-KEY
+  # 安全:API Key 只存服务端,任何接口都不返回。推荐写进环境变量 DASHSCOPE_API_KEY,
+  #      不写进本文件;下方留空时应用仍可正常启动,AI 接口将返回 code=6001。
+  ai:
+    enabled: true
+    api-key: ${DASHSCOPE_API_KEY:}        # ← 把 ApiKey 填进环境变量 DASHSCOPE_API_KEY
+    # 你的 TokenPlan 走的是阿里云百炼「应用级 · Anthropic 兼容」地址,
+    # 协议是 Anthropic Messages API(/v1/messages + x-api-key 头),不是 OpenAI 的 chat/completions。
+    base-url: ${DASHSCOPE_BASE_URL:https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic}
+    chat-path: /v1/messages
+    anthropic-version: 2023-06-01
+    model: ${DASHSCOPE_MODEL:qwen3.8-flash}   # TokenPlan 覆盖的模型
+    # 视觉模型与文本用同一个(你的 qwen3.8-flash 本身支持视觉理解)
+    vision-model: ${DASHSCOPE_VISION_MODEL:qwen3.8-flash}
+    timeout-seconds: 15
+    # 视觉识别的单次超时:整页图片大、模型思考久,给得比文本调用宽松
+    vision-timeout-seconds: 180
+    # PDF 识别参数
+    pdf-render-dpi: 150        # 一页 A4 约 200—400KB,清晰度与体积的平衡点
+    pdf-max-pages: 30          # 防止误传一本书把额度烧光
+    pdf-pages-per-call: 1      # 一次发一页:质量稳、失败重试代价小
+    temperature: 0.3
+    max-tokens: 1024
+    # 讲解类输出硬约束:超过该字数视为不合格输出(见 PromptTemplates)
+    max-explain-chars: 120

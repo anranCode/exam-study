@@ -1,0 +1,1698 @@
+{
+  "subjectCode": "13000",
+  "paper": {
+    "name": "2026年4月英语(专升本)真题",
+    "type": "REAL",
+    "year": 2026,
+    "totalScore": 100,
+    "durationMin": 150,
+    "remark": "由扫描件 PDF 识别整理;卷面无答案,答案由 AI 代做,状态均为待校对(DRAFT)"
+  },
+  "items": [
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nI longed for a visit to Australia.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "T",
+      "analysis": "开头就说澳大利亚是他一直想去的国家。"
+    },
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nI made some new friends during my visit in Australia.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "F",
+      "analysis": "原文说他有朋友在那里读书,不是旅途中新交的朋友。"
+    },
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nI spent over 20 hours on my flight to Australia.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "F",
+      "analysis": "10 小时到香港再加 8 小时到悉尼,合计 18 小时,不到 20 小时。"
+    },
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nI watched films to kill the flight time.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "T",
+      "analysis": "原文说飞机上有很多电影让他不无聊。"
+    },
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nI felt very tired because of the time difference.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "NG",
+      "analysis": "原文只说花了一段时间适应时差,没有说感到疲惫。"
+    },
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nKoalas can be found in many parts of the world.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "F",
+      "analysis": "原文说澳大利亚有别处见不到的野生动植物。"
+    },
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nKoalas spend most of their time sleeping.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "T",
+      "analysis": "原文说考拉一天可睡到 22 小时以保存体力。"
+    },
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nKoalas feed chiefly on tree leaves.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "NG",
+      "analysis": "原文没有提到考拉吃什么。"
+    },
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nVisitors were asked to keep distance from kangaroos.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "F",
+      "analysis": "原文说他们被允许喂食和触摸袋鼠。"
+    },
+    {
+      "sectionName": "第一部分 阅读判断",
+      "type": "READING_JUDGE",
+      "chapterName": "第一部分 阅读判断",
+      "stem": "【原文 · Australia】\nAustralia was a country I always wanted to visit. This year I saved up some money and booked a flight to go travelling. I had some friends studying there, so it was a perfect opportunity to see friends and travel around.\n\nThe flight made me realize exactly how far away Australia is from home. I spent 10 hours flying from London to Hong Kong, then a further 8 hours to Sydney, my first stop in Australia. The flight went quite quickly though, since there were lots of films to keep me entertained.\n\nWhen I arrived, I felt strange. Everything was upside down over there. It was the start of winter in May! Fortunately, for me the weather was still warm and sunny. It also took me a while to get used to the time difference.\n\nAustralia is truly beautiful. It is full of views and wildlife you would not find anywhere else in the world. One of the highlights of my trip was visiting a koala (考拉) reserve in Brisbane. There were koalas everywhere sleeping in the trees. I even got a chance to hold one. I learnt lots of facts about koalas too. They can sleep for up to 22 hours a day to save energy! At the reserve there was also a big lawn full of kangaroos (袋鼠). We were allowed to feed and touch them. They were really cute and friendly.\n\nI loved visiting Australia, from the mountains and waterfalls in the National Parks to the long white sandy beaches. It's an incredible country and worth visiting. I'm already dreaming of going back!\n\nI enjoyed the sandy beaches in Australia.",
+      "score": 1.0,
+      "difficulty": 1,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "T",
+          "text": "True"
+        },
+        {
+          "key": "F",
+          "text": "False"
+        },
+        {
+          "key": "NG",
+          "text": "Not Given"
+        }
+      ],
+      "answer": "T",
+      "analysis": "原文结尾说最爱从高山瀑布到白色沙滩,还想再去。"
+    },
+    {
+      "sectionName": "第二部分 阅读选择",
+      "type": "READING_CHOICE",
+      "chapterName": "第二部分 阅读选择",
+      "stem": "【原文 · Veganism】\nVeganism. What does it mean? To some of you it might be a completely new word. And it's certainly a word I have only become familiar with in recent years. A vegan diet is one that contains no animal products. That means no meat, no milk no eggs, etc.\n\n11. According to Paragraph 1, a vegan diet is ________.",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "advised by food experts"
+        },
+        {
+          "key": "B",
+          "text": "familiar to most people"
+        },
+        {
+          "key": "C",
+          "text": "followed by many people"
+        },
+        {
+          "key": "D",
+          "text": "free from animal products"
+        }
+      ],
+      "answer": "D",
+      "analysis": "第 1 段说 vegan diet 不含任何动物制品。"
+    },
+    {
+      "sectionName": "第二部分 阅读选择",
+      "type": "READING_CHOICE",
+      "chapterName": "第二部分 阅读选择",
+      "stem": "【原文 · Veganism】\nI became interested in vegan lifestyle months ago. As I was surfing videos on the Internet, I came across a woman called Freelee. She claimed to regularly eat around fifty bananas a day to stay healthy. Fifty bananas! I quickly realized that this was not the diet for me. However, what she was saying about veganism did pique my interest. And I went on to watch many more vegan videos. Eventually, I switched to veganism about six months ago.\n\n12. The author knew the vegan lifestyle through ________.",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "online videos"
+        },
+        {
+          "key": "B",
+          "text": "her friends"
+        },
+        {
+          "key": "C",
+          "text": "vegan books"
+        },
+        {
+          "key": "D",
+          "text": "TV programs"
+        }
+      ],
+      "answer": "A",
+      "analysis": "原文说他在网上刷视频时接触到 vegan 生活方式。"
+    },
+    {
+      "sectionName": "第二部分 阅读选择",
+      "type": "READING_CHOICE",
+      "chapterName": "第二部分 阅读选择",
+      "stem": "【原文 · Veganism】\nI became interested in vegan lifestyle months ago. As I was surfing videos on the Internet, I came across a woman called Freelee. She claimed to regularly eat around fifty bananas a day to stay healthy. Fifty bananas! I quickly realized that this was not the diet for me. However, what she was saying about veganism did pique my interest. And I went on to watch many more vegan videos. Eventually, I switched to veganism about six months ago.\n\n13. The word \"pique\" (Para. 2) probably means \"________\".",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "express"
+        },
+        {
+          "key": "B",
+          "text": "arouse"
+        },
+        {
+          "key": "C",
+          "text": "expand"
+        },
+        {
+          "key": "D",
+          "text": "protect"
+        }
+      ],
+      "answer": "B",
+      "analysis": "pique one's interest 意为激起兴趣,与 arouse 最接近。"
+    },
+    {
+      "sectionName": "第二部分 阅读选择",
+      "type": "READING_CHOICE",
+      "chapterName": "第二部分 阅读选择",
+      "stem": "【原文 · Veganism】\nWhile veganism is often associated with physical weakness, that is certainly not the case for me. I have discovered many delicious vegan products, which one might never consider as vegan.\n\nPersonally, eating this way has given me a much more positive outlook on life. Another vegan Kristina's story is even more amazing. Kristina was bitten by a deadly spider. She was not given the medicines required to survive the bite. Yet she made a full and speedy recovery. She attributes it to the magic power of a vegan lifestyle.\n\n14. The author believes that the vegan diet is ________.",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "healthy"
+        },
+        {
+          "key": "B",
+          "text": "cheap"
+        },
+        {
+          "key": "C",
+          "text": "sugar-free"
+        },
+        {
+          "key": "D",
+          "text": "low-salt"
+        }
+      ],
+      "answer": "A",
+      "analysis": "原文说素食没有让他虚弱,反而让他更积极,认为有益健康。"
+    },
+    {
+      "sectionName": "第二部分 阅读选择",
+      "type": "READING_CHOICE",
+      "chapterName": "第二部分 阅读选择",
+      "stem": "【原文 · Veganism】\nWhile veganism is often associated with physical weakness, that is certainly not the case for me. I have discovered many delicious vegan products, which one might never consider as vegan.\n\nPersonally, eating this way has given me a much more positive outlook on life. Another vegan Kristina's story is even more amazing. Kristina was bitten by a deadly spider. She was not given the medicines required to survive the bite. Yet she made a full and speedy recovery. She attributes it to the magic power of a vegan lifestyle.\n\n15. Kristina is mentioned because she ________.",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "attracted a lot of fans"
+        },
+        {
+          "key": "B",
+          "text": "had a positive attitude toward life"
+        },
+        {
+          "key": "C",
+          "text": "went on a special fruit-based diet"
+        },
+        {
+          "key": "D",
+          "text": "quickly recovered from a spider bite"
+        }
+      ],
+      "answer": "D",
+      "analysis": "克里斯蒂娜被毒蜘蛛咬后迅速痊愈,作者归因于素食。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第①段】\nOver the last 15 years, more and more people in the US have been drinking bottled water. There is no sign of slowing down. In fact, sales of bottled water are going up faster than other kind of drink. It is true even in cities where it is safe to drink tap water. This has been a disaster for the environment and for our health.\n\n请为第 ① 段选择正确的小标题:",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "Making droughts worse"
+        },
+        {
+          "key": "B",
+          "text": "Harmful elements in bottled water"
+        },
+        {
+          "key": "C",
+          "text": "Need for a better image of tap water"
+        },
+        {
+          "key": "D",
+          "text": "Growing attention to tap water"
+        },
+        {
+          "key": "E",
+          "text": "Causing waste and pollution"
+        },
+        {
+          "key": "F",
+          "text": "Increasing sales of bottled water"
+        }
+      ],
+      "answer": "F",
+      "analysis": "第①段讲瓶装水销量持续上升。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第②段】\nMost bottled water comes from underground water. Much of this underground water have flowed into rivers and lakes. Using this water can make droughts (干旱) more serious. Many companies use water from mountain glaciers (冰川), but this is not much better. When the glacier melts, the water usually flows to areas like rivers or wetlands. When companies take glacier water, they take it from areas that need it.\n\n请为第 ② 段选择正确的小标题:",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "Making droughts worse"
+        },
+        {
+          "key": "B",
+          "text": "Harmful elements in bottled water"
+        },
+        {
+          "key": "C",
+          "text": "Need for a better image of tap water"
+        },
+        {
+          "key": "D",
+          "text": "Growing attention to tap water"
+        },
+        {
+          "key": "E",
+          "text": "Causing waste and pollution"
+        },
+        {
+          "key": "F",
+          "text": "Increasing sales of bottled water"
+        }
+      ],
+      "answer": "A",
+      "analysis": "第②段讲取水加剧干旱。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第③段】\nIt takes about 1.6 liters of water to make one liter of bottled water. This wastes a lot of water. Also transporting the bottled water to stores burns fuel and creates pollution. The problems do not stop when the water reaches people who buy it. Water bottles are made from plastic which does not break down. Although it can be recycled, people usually do not put it in the recycle can.\n\n请为第 ③ 段选择正确的小标题:",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "Making droughts worse"
+        },
+        {
+          "key": "B",
+          "text": "Harmful elements in bottled water"
+        },
+        {
+          "key": "C",
+          "text": "Need for a better image of tap water"
+        },
+        {
+          "key": "D",
+          "text": "Growing attention to tap water"
+        },
+        {
+          "key": "E",
+          "text": "Causing waste and pollution"
+        },
+        {
+          "key": "F",
+          "text": "Increasing sales of bottled water"
+        }
+      ],
+      "answer": "E",
+      "analysis": "第③段讲生产运输浪费水并造成污染。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第④段】\nSome may say that bottled water is safer and healthier than tap water. But that is not true. Sometimes chemicals or bacteria get into bottled water, and companies have to destroy them. Actually, tap water is often healthier than bottled water. Bottled water may lack fluoride (氟化物) which helps protect our teeth. Fluoride is found in tiny amounts in tap water.\n\n请为第 ④ 段选择正确的小标题:",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "Making droughts worse"
+        },
+        {
+          "key": "B",
+          "text": "Harmful elements in bottled water"
+        },
+        {
+          "key": "C",
+          "text": "Need for a better image of tap water"
+        },
+        {
+          "key": "D",
+          "text": "Growing attention to tap water"
+        },
+        {
+          "key": "E",
+          "text": "Causing waste and pollution"
+        },
+        {
+          "key": "F",
+          "text": "Increasing sales of bottled water"
+        }
+      ],
+      "answer": "B",
+      "analysis": "第④段讲瓶装水也可能含有害物质。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第⑤段】\nObviously, more people need to know that tap water is safer and healthier. Unfortunately, tap water cannot advertise itself. When a product that is cheaper and better does not win, that is bad news. When the product is water, we all lose.\n\n请为第 ⑤ 段选择正确的小标题:",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "Making droughts worse"
+        },
+        {
+          "key": "B",
+          "text": "Harmful elements in bottled water"
+        },
+        {
+          "key": "C",
+          "text": "Need for a better image of tap water"
+        },
+        {
+          "key": "D",
+          "text": "Growing attention to tap water"
+        },
+        {
+          "key": "E",
+          "text": "Causing waste and pollution"
+        },
+        {
+          "key": "F",
+          "text": "Increasing sales of bottled water"
+        }
+      ],
+      "answer": "C",
+      "analysis": "第⑤段讲自来水需要更好的形象宣传。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第①段】\nOver the last 15 years, more and more people in the US have been drinking bottled water. There is no sign of slowing down. In fact, sales of bottled water are going up faster than other kind of drink. It is true even in cities where it is safe to drink tap water. This has been a disaster for the environment and for our health.\n\n补全句子:City people prefer bottled water ________.",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "in tiny amounts"
+        },
+        {
+          "key": "B",
+          "text": "towards tap water"
+        },
+        {
+          "key": "C",
+          "text": "does harm to the environment"
+        },
+        {
+          "key": "D",
+          "text": "brings more health benefits"
+        },
+        {
+          "key": "E",
+          "text": "with the problem of drought"
+        },
+        {
+          "key": "F",
+          "text": "despite the safety of tap water"
+        }
+      ],
+      "answer": "F",
+      "analysis": "第①段说即使在自来水安全的城市,人们仍买瓶装水。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第②段】\nMost bottled water comes from underground water. Much of this underground water have flowed into rivers and lakes. Using this water can make droughts (干旱) more serious. Many companies use water from mountain glaciers (冰川), but this is not much better. When the glacier melts, the water usually flows to areas like rivers or wetlands. When companies take glacier water, they take it from areas that need it.\n\n补全句子:Taking water from glaciers helps little ________.",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "in tiny amounts"
+        },
+        {
+          "key": "B",
+          "text": "towards tap water"
+        },
+        {
+          "key": "C",
+          "text": "does harm to the environment"
+        },
+        {
+          "key": "D",
+          "text": "brings more health benefits"
+        },
+        {
+          "key": "E",
+          "text": "with the problem of drought"
+        },
+        {
+          "key": "F",
+          "text": "despite the safety of tap water"
+        }
+      ],
+      "answer": "E",
+      "analysis": "第②段说取冰川水会加剧取水地区的干旱。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第③段】\nIt takes about 1.6 liters of water to make one liter of bottled water. This wastes a lot of water. Also transporting the bottled water to stores burns fuel and creates pollution. The problems do not stop when the water reaches people who buy it. Water bottles are made from plastic which does not break down. Although it can be recycled, people usually do not put it in the recycle can.\n\n补全句子:Transportation of bottled water ________.",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "in tiny amounts"
+        },
+        {
+          "key": "B",
+          "text": "towards tap water"
+        },
+        {
+          "key": "C",
+          "text": "does harm to the environment"
+        },
+        {
+          "key": "D",
+          "text": "brings more health benefits"
+        },
+        {
+          "key": "E",
+          "text": "with the problem of drought"
+        },
+        {
+          "key": "F",
+          "text": "despite the safety of tap water"
+        }
+      ],
+      "answer": "C",
+      "analysis": "第③段说运输瓶装水要烧燃料、造成污染。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第④段】\nSome may say that bottled water is safer and healthier than tap water. But that is not true. Sometimes chemicals or bacteria get into bottled water, and companies have to destroy them. Actually, tap water is often healthier than bottled water. Bottled water may lack fluoride (氟化物) which helps protect our teeth. Fluoride is found in tiny amounts in tap water.\n\n补全句子:Compared with bottled water, tap water ________.",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "in tiny amounts"
+        },
+        {
+          "key": "B",
+          "text": "towards tap water"
+        },
+        {
+          "key": "C",
+          "text": "does harm to the environment"
+        },
+        {
+          "key": "D",
+          "text": "brings more health benefits"
+        },
+        {
+          "key": "E",
+          "text": "with the problem of drought"
+        },
+        {
+          "key": "F",
+          "text": "despite the safety of tap water"
+        }
+      ],
+      "answer": "D",
+      "analysis": "第④段说自来水往往更健康。"
+    },
+    {
+      "sectionName": "第三部分 概括段落大意和补全句子",
+      "type": "SECTION_MATCH",
+      "chapterName": "第三部分 概括段落大意和补全句子",
+      "stem": "【原文 · Bottled Water 第⑤段】\nObviously, more people need to know that tap water is safer and healthier. Unfortunately, tap water cannot advertise itself. When a product that is cheaper and better does not win, that is bad news. When the product is water, we all lose.\n\n补全句子:People need to change their attitude ________.",
+      "score": 1.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "in tiny amounts"
+        },
+        {
+          "key": "B",
+          "text": "towards tap water"
+        },
+        {
+          "key": "C",
+          "text": "does harm to the environment"
+        },
+        {
+          "key": "D",
+          "text": "brings more health benefits"
+        },
+        {
+          "key": "E",
+          "text": "with the problem of drought"
+        },
+        {
+          "key": "F",
+          "text": "despite the safety of tap water"
+        }
+      ],
+      "answer": "B",
+      "analysis": "第⑤段说要让更多人知道自来水更安全,即改变对自来水的态度。"
+    },
+    {
+      "sectionName": "第四部分 填句补文",
+      "type": "SENTENCE_FILL",
+      "chapterName": "第四部分 填句补文",
+      "stem": "【原文 · Bird Maps and Compasses】\nEvery year hundreds of species of birds take long trips. ___ In the fall, they fly to warmer climates where food is plentiful all winter.\n\n第 26 空应填入:",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "The bands contained a name and address."
+        },
+        {
+          "key": "B",
+          "text": "Birds use the earth's magnetic field to navigate too."
+        },
+        {
+          "key": "C",
+          "text": "A map and a compass are often helpful for long trips."
+        },
+        {
+          "key": "D",
+          "text": "They fly thousands of miles from one home to another."
+        },
+        {
+          "key": "E",
+          "text": "They learn the route that the older geese have traveled before."
+        },
+        {
+          "key": "F",
+          "text": "They have answered many questions about how birds navigate."
+        }
+      ],
+      "answer": "D",
+      "analysis": "空格后讲秋季与春季的迁徙,前面应先说它们飞越数千英里。"
+    },
+    {
+      "sectionName": "第四部分 填句补文",
+      "type": "SENTENCE_FILL",
+      "chapterName": "第四部分 填句补文",
+      "stem": "【原文 · Bird Maps and Compasses】\nIn the 1800s, scientists started putting bands around birds' legs. ___ When people found the banded birds, they contacted the person named on the band\n\n第 27 空应填入:",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "The bands contained a name and address."
+        },
+        {
+          "key": "B",
+          "text": "Birds use the earth's magnetic field to navigate too."
+        },
+        {
+          "key": "C",
+          "text": "A map and a compass are often helpful for long trips."
+        },
+        {
+          "key": "D",
+          "text": "They fly thousands of miles from one home to another."
+        },
+        {
+          "key": "E",
+          "text": "They learn the route that the older geese have traveled before."
+        },
+        {
+          "key": "F",
+          "text": "They have answered many questions about how birds navigate."
+        }
+      ],
+      "answer": "A",
+      "analysis": "下文说人们联系环上的名字,所以环上写有姓名地址。"
+    },
+    {
+      "sectionName": "第四部分 填句补文",
+      "type": "SENTENCE_FILL",
+      "chapterName": "第四部分 填句补文",
+      "stem": "【原文 · Bird Maps and Compasses】\nToday scientists still put bands on birds' legs. They also use new ways of tracking birds such as airplanes, computers, and satellites. ___\n\n第 28 空应填入:",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "The bands contained a name and address."
+        },
+        {
+          "key": "B",
+          "text": "Birds use the earth's magnetic field to navigate too."
+        },
+        {
+          "key": "C",
+          "text": "A map and a compass are often helpful for long trips."
+        },
+        {
+          "key": "D",
+          "text": "They fly thousands of miles from one home to another."
+        },
+        {
+          "key": "E",
+          "text": "They learn the route that the older geese have traveled before."
+        },
+        {
+          "key": "F",
+          "text": "They have answered many questions about how birds navigate."
+        }
+      ],
+      "answer": "F",
+      "analysis": "新手段回答了关于鸟类如何导航的许多问题。"
+    },
+    {
+      "sectionName": "第四部分 填句补文",
+      "type": "SENTENCE_FILL",
+      "chapterName": "第四部分 填句补文",
+      "stem": "【原文 · Bird Maps and Compasses】\nBirds often migrate in groups. You may have seen Canada geese flying high in the sky in a V-form. Young birds follow their parents, ___\n\n第 29 空应填入:",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "The bands contained a name and address."
+        },
+        {
+          "key": "B",
+          "text": "Birds use the earth's magnetic field to navigate too."
+        },
+        {
+          "key": "C",
+          "text": "A map and a compass are often helpful for long trips."
+        },
+        {
+          "key": "D",
+          "text": "They fly thousands of miles from one home to another."
+        },
+        {
+          "key": "E",
+          "text": "They learn the route that the older geese have traveled before."
+        },
+        {
+          "key": "F",
+          "text": "They have answered many questions about how birds navigate."
+        }
+      ],
+      "answer": "E",
+      "analysis": "幼鸟跟着父母,学习长辈走过的路线。"
+    },
+    {
+      "sectionName": "第四部分 填句补文",
+      "type": "SENTENCE_FILL",
+      "chapterName": "第四部分 填句补文",
+      "stem": "【原文 · Bird Maps and Compasses】\n___ Chemicals in their brains allow them to sense the magnetic field and travel in the right direction.\n\n第 30 空应填入:",
+      "score": 2.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "The bands contained a name and address."
+        },
+        {
+          "key": "B",
+          "text": "Birds use the earth's magnetic field to navigate too."
+        },
+        {
+          "key": "C",
+          "text": "A map and a compass are often helpful for long trips."
+        },
+        {
+          "key": "D",
+          "text": "They fly thousands of miles from one home to another."
+        },
+        {
+          "key": "E",
+          "text": "They learn the route that the older geese have traveled before."
+        },
+        {
+          "key": "F",
+          "text": "They have answered many questions about how birds navigate."
+        }
+      ],
+      "answer": "B",
+      "analysis": "空格后讲磁场感应,承接「鸟类也利用地磁场导航」。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nMy hometown and my college town have several things in common. First, both are ___ communities. My hometown, Gridlock, has a population of only about 10,000 people.\n\n第 31 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "E",
+      "analysis": "人口只有 1 万,对应 small。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nSimilarly, my college town, Subnormal, ___ of about 11,000 local residents.\n\n第 32 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "A",
+      "analysis": "consist of 意为「由…组成」。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nThis population rises to 15,000 people when the college students are ___ classes.\n\n第 33 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "C",
+      "analysis": "attending classes 意为「上课」。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nSecond, both are located in rural areas. Gridlock is surrounded by farmland, which is devoted ___ to growing corn and beans.\n\n第 34 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "B",
+      "analysis": "mainly 修饰 devoted to,表示「主要用于」。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nLikewise, Subnormal lies in the ___ of farmland that is used to ___ pigs and cattle.\n\n第 35 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "F",
+      "analysis": "in the center of 位于…中心。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nLikewise, Subnormal lies in the center of farmland that is used to ___ pigs and cattle.\n\n第 36 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "I",
+      "analysis": "raise pigs and cattle 意为饲养猪牛。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nThird, both contain college campuses. Gridlock is ___ to Neutron College, which is famous for its Agricultural Economics program.\n\n第 37 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "K",
+      "analysis": "be home to 意为「是…的所在地」。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nIn the same ___, Subnormal boasts the ___ campus of Quark College.\n\n第 38 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "L",
+      "analysis": "in the same way 意为「同样地」。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nIn the same way, Subnormal boasts the ___ campus of Quark College, which is well ___ for its Agricultural Engineering Department.\n\n第 39 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "H",
+      "analysis": "形容校园用 beautiful。"
+    },
+    {
+      "sectionName": "第五部分 填词补文",
+      "type": "WORD_FILL",
+      "chapterName": "第五部分 填词补文",
+      "stem": "【原文 · My Hometown and My College Town】\nSubnormal boasts the beautiful campus of Quark College, which is well ___ for its Agricultural Engineering Department.\n\n第 40 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "options": [
+        {
+          "key": "A",
+          "text": "consists"
+        },
+        {
+          "key": "B",
+          "text": "mainly"
+        },
+        {
+          "key": "C",
+          "text": "attending"
+        },
+        {
+          "key": "D",
+          "text": "clear"
+        },
+        {
+          "key": "E",
+          "text": "small"
+        },
+        {
+          "key": "F",
+          "text": "center"
+        },
+        {
+          "key": "G",
+          "text": "hardly"
+        },
+        {
+          "key": "H",
+          "text": "beautiful"
+        },
+        {
+          "key": "I",
+          "text": "raise"
+        },
+        {
+          "key": "J",
+          "text": "known"
+        },
+        {
+          "key": "K",
+          "text": "home"
+        },
+        {
+          "key": "L",
+          "text": "way"
+        }
+      ],
+      "answer": "J",
+      "analysis": "be well known for 意为「以…闻名」。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nTechnology has become an essential part of our daily (day) life. It ___ (accompany) us everywhere we go.\n\n第 41 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "accompanies",
+      "analysis": "主语 It 为第三人称单数,用一般现在时 accompanies。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nDigital technology, in the form of smart ___ (phone), web-based TVs and computers, is changing the world.\n\n第 42 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "phones",
+      "analysis": "指多种智能设备,用复数 phones。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nDigital technology, in the form of smart phones, web-based TVs and computers, is ___ (change) the world, especially for advertisers.\n\n第 43 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "changing",
+      "analysis": "is + 现在分词,构成现在进行时。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nThey can ___ (easy) take part in surveys or just turn them off if they want to.\n\n第 44 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "easily",
+      "analysis": "修饰动词 take part 要用副词 easily。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nThey can also promote a brand by ___ (suggest) how good a product is to other people.\n\n第 45 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "suggesting",
+      "analysis": "by 后接动名词。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nSocial media networks also play an ___ (importance) part in global advertising strategies.\n\n第 46 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "important",
+      "analysis": "修饰名词 part 要用形容词 important。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nWhile they browse the Internet, it would be ___ (help) for such ads to show up.\n\n第 47 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "helpful",
+      "analysis": "be helpful for 意为「有帮助」。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nInternet ___ (user) click on these ads more often if they look for relevant information.\n\n第 48 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "users",
+      "analysis": "主语指众多用户,用复数 users。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nInternet users click on these ads more often if they look for relevant ___ (inform).\n\n第 49 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "information",
+      "analysis": "inform 的名词形式是不可数名词 information。"
+    },
+    {
+      "sectionName": "第六部分 完形补文",
+      "type": "CLOZE_TRANSFORM",
+      "chapterName": "第六部分 完形补文",
+      "stem": "【原文 · Advertising with Digital Technology】\nAdvertisers are now ___ (face) with a great challenge.\n\n第 50 空应填入:",
+      "score": 1.5,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answer": "faced",
+      "analysis": "be faced with 意为「面临」。"
+    },
+    {
+      "sectionName": "第七部分 短文写作",
+      "type": "WRITING",
+      "chapterName": "第七部分 短文写作",
+      "stem": "某英文报社正在举办题为 \"Safe Journey\" 的征文活动。请你根据下述写作要点提交一篇英文短文应征。\n· 旅途中安全的重要性。\n· 旅途中应该特别注意的事项。\n\n(要求 100 词左右,答案写在答题纸上。)",
+      "score": 30.0,
+      "difficulty": 2,
+      "status": "DRAFT",
+      "answerPoints": [
+        "点明旅途安全的重要性(如避免意外、保障顺利出行)",
+        "列出旅途中应特别注意的事项(如保管财物、注意交通与住宿安全、留意天气与当地规定)",
+        "结构完整:开头引入、正文分点、结尾总结,词数 100 左右"
+      ],
+      "analysis": "应用文写作按要点给分:第一段点题说明安全的重要性,第二段分点写注意事项,结尾一句收束。"
+    }
+  ]
+}
