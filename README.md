@@ -11,7 +11,7 @@
 
 | 部分 | 状态 |
 |---|---|
-| 数据库 | ✅ 建库 + 7 个 Flyway 迁移(15 张表),初始科目已入库 |
+| 数据库 | ✅ 建库 + 8 个 Flyway 迁移(15 张表),含当前题库与学习进度快照 |
 | 后端骨架 | ✅ 统一响应 / 错误码 / 全局异常 / CORS / Swagger / 健康检查 |
 | 科目与章节 | ✅ 增删改查全部可用(含删除守卫、章节两级树) |
 | 题库核心 | ✅ 题目增删改查、按题型校验、中文题干检索、分页 |
@@ -273,3 +273,52 @@ app/
   开发期前端在 `:5173`,想点链接直接进页面就改成 `http://localhost:5173`;上线后由后端托管前端产物,保持 `:8080` 即可。
 - 兜底环境变量 `WECOM_WEBHOOK_URL` / `SERVERCHAN_KEY`:设置页没填时退回这两个值。
 
+---
+
+## 九、部署到服务器(数据随迁移一起带走)
+
+Flyway 迁移 V1—V8 已经包含建表、四条初始科目,以及**本机当前数据快照**
+(1354 道题、27 份试卷、错题本排期、练习与答题记录等)。因此全新服务器上
+**不需要手工导入任何 SQL**,首次启动就会自动建表并灌好数据。
+
+### 1. 打包
+
+```bash
+cd frontend && npm run build
+mkdir -p ../backend/src/main/resources/static
+cp -r dist/. ../backend/src/main/resources/static/
+cd ../backend && mvn -DskipTests package
+```
+
+产物是 `backend/target/study-exam-backend-0.1.0.jar`。前端产物放进 `static/` 后由后端同源托管,
+`/api` 与页面同域,服务器上不需要再配 CORS。
+
+### 2. 服务器环境
+
+```bash
+mysql -uroot -p -e "CREATE DATABASE study_exam DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+export DB_USERNAME=study_exam
+export DB_PASSWORD='换成你的密码'
+export DASHSCOPE_API_KEY='你的千问 Key'
+java -jar study-exam-backend-0.1.0.jar
+```
+
+首次启动会自动执行 V1—V8;数据落在服务器自己的 MySQL 里,之后与本地互不影响。
+提醒里的跳转链接记得改:`--study-exam.notify.app-base-url=http://<服务器地址>:8080`。
+
+### 3. 数据快照的边界
+
+V8 是 **2026-10-18 生成的快照**。之后在本机新导入的题目、新做的练习不会自动进入 V8。
+需要把最新数据带到服务器时,加一个 V9 迁移重新导出一份即可(先 `mysqldump` 导出,
+再把 `INSERT INTO` 换成 `INSERT IGNORE INTO`,这样在已有数据的机器上重复执行也不会产生副本):
+
+```bash
+mysqldump -uroot -p --default-character-set=utf8mb4 --no-create-info --complete-insert \
+  --skip-comments --skip-add-locks --skip-disable-keys --single-transaction \
+  --result-file=backend/src/main/resources/db/migration/V9__seed_latest.sql \
+  study_exam chapter question paper paper_question practice_session answer_record review_item study_log import_log
+```
+
+不含在快照里的表:`subject` / `user` / `user_setting`(V1、V5 已建好同样的初始数据)、
+`ai_call_log` / `reminder_log` / `ai_digest`(运行期遥测,换机器没有意义)。
