@@ -31,6 +31,18 @@ export function getReviewTypeCounts(subjectId?: number): Promise<ReviewTypeCount
   return http.get<ReviewTypeCountVO[]>(`${BASE}/review/type-counts`, { params })
 }
 
+/**
+ * GET /review/wrong-pool/type-counts —— 错题练习池的题型分布。
+ *
+ * 比 type-counts 严格:只数「已发布」的题,也就是真能抽到的题。
+ * 自由练习页「错题练习」的题型下拉与「可抽 N 题」都用这个数。
+ */
+export function getWrongPoolTypeCounts(subjectId?: number): Promise<ReviewTypeCountVO[]> {
+  const params: Record<string, unknown> = {}
+  if (subjectId != null) params.subjectId = subjectId
+  return http.get<ReviewTypeCountVO[]>(`${BASE}/review/wrong-pool/type-counts`, { params })
+}
+
 /** PUT /review/items/{questionId}/mastered —— 手动标记已掌握(出队) */
 export function markReviewItemMastered(questionId: number): Promise<void> {
   return http.put<void>(`${BASE}/review/items/${questionId}/mastered`)

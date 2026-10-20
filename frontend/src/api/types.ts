@@ -9,7 +9,7 @@
 export type ExamSlot = 'D1_AM' | 'D1_PM' | 'D2_AM' | 'D2_PM'
 
 /** 练习模式 */
-export type PracticeMode = 'daily' | 'random' | 'chapter' | 'mock' | 'review'
+export type PracticeMode = 'daily' | 'random' | 'chapter' | 'mock' | 'review' | 'wrong'
 
 /** 作答信心度:不确定 / 答错 / 确定 */
 export type Confidence = 'SURE' | 'UNSURE' | 'WRONG'
@@ -181,7 +181,7 @@ export interface QuestionVO {
 }
 
 /** 练习模式:API 层使用大写枚举名 */
-export type PracticeModeUpper = 'DAILY' | 'RANDOM' | 'CHAPTER' | 'MOCK' | 'REVIEW'
+export type PracticeModeUpper = 'DAILY' | 'RANDOM' | 'CHAPTER' | 'MOCK' | 'REVIEW' | 'WRONG'
 
 export interface PracticeSessionCreateDTO {
   mode: PracticeModeUpper
@@ -191,7 +191,7 @@ export interface PracticeSessionCreateDTO {
   paperId?: number | null
   /** 指定题目:非空时后端忽略组题模式,就按这几道出题(错题本「立即复习」某一道走这里) */
   questionIds?: number[] | null
-  /** 题型筛选:只抽这几种题型,空表示不限(RANDOM / CHAPTER 生效) */
+  /** 题型筛选:只抽这几种题型,空表示不限(RANDOM / CHAPTER / REVIEW / WRONG 生效) */
   types?: string[] | null
 }
 

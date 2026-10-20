@@ -45,6 +45,75 @@ public interface ReviewItemRepository extends JpaRepository<ReviewItem, Long> {
             """)
     long countDue(@Param("userId") Long userId, @Param("now") LocalDateTime now);
 
+    /**
+     * 错题练习池:从还没掌握的错题里**随机**抽题,不看到期时间。
+     *
+     * <p>和 {@link #findDueQuestionIds} 的区别只在「到不到期」这一条:
+     * 到期复习是每天该做的事(按排期走),错题练习是想练就练(随机抽)。
+     * 只看 {@code status = 'LEARNING'}:已经连对三次出队的题不该再反复占用练习额度。
+     *
+     * <p>排序用 RAND() 而不是错题数:这里要的是「随机抽」,
+     * 按错题数排会让每次练习都是那几道最难的题,反而练不到别的。
+     * 题量在万级以内,RAND() 可接受(与 QuestionRepository 的抽题保持一致)。
+     */
+    @Query(value = """
+            SELECT ri.question_id
+            FROM review_item ri
+            JOIN question q ON q.id = ri.question_id
+            WHERE ri.user_id = :userId
+              AND ri.status = 'LEARNING'
+              AND (:subjectId IS NULL OR q.subject_id = :subjectId)
+              AND (:typeFilter = FALSE OR q.type IN (:types))
+              AND q.status = 'PUBLISHED'
+            ORDER BY RAND()
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Long> findRandomWrongQuestionIds(@Param("userId") Long userId,
+                                          @Param("subjectId") Long subjectId,
+                                          @Param("typeFilter") boolean typeFilter,
+                                          @Param("types") List<String> types,
+                                          @Param("limit") int limit);
+
+    /**
+     * 错题练习池的存量,给前端提示「这个范围下还能练几题」。
+     * 条件与 {@link #findRandomWrongQuestionIds} 完全一致,否则算出来的数和实际抽到的对不上。
+     */
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM review_item ri
+            JOIN question q ON q.id = ri.question_id
+            WHERE ri.user_id = :userId
+              AND ri.status = 'LEARNING'
+              AND (:subjectId IS NULL OR q.subject_id = :subjectId)
+              AND (:typeFilter = FALSE OR q.type IN (:types))
+              AND q.status = 'PUBLISHED'
+            """, nativeQuery = true)
+    long countRandomWrong(@Param("userId") Long userId,
+                          @Param("subjectId") Long subjectId,
+                          @Param("typeFilter") boolean typeFilter,
+                          @Param("types") List<String> types);
+
+    /**
+     * 错题练习池按题型分布,给「错题练习」的题型下拉用。
+     *
+     * <p>与 {@link #countGroupedByType} 的区别:这里只数**能练**的题
+     * ({@code q.status = 'PUBLISHED'}),并且固定只数 LEARNING。
+     * 下拉里列出的每种题型必须真能抽到题,否则用户选了却是空场次。
+     */
+    @Query(value = """
+            SELECT q.type AS type, COUNT(*) AS cnt
+            FROM review_item ri
+            JOIN question q ON q.id = ri.question_id
+            WHERE ri.user_id = :userId
+              AND ri.status = 'LEARNING'
+              AND (:subjectId IS NULL OR q.subject_id = :subjectId)
+              AND q.status = 'PUBLISHED'
+            GROUP BY q.type
+            ORDER BY COUNT(*) DESC, q.type ASC
+            """, nativeQuery = true)
+    List<Object[]> countWrongPoolGroupedByType(@Param("userId") Long userId,
+                                              @Param("subjectId") Long subjectId);
+
     @Query(value = """
             SELECT COUNT(*)
             FROM review_item ri

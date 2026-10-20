@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
  *   <tr><td>CHAPTER</td><td>指定章节内随机 N 题</td></tr>
  *   <tr><td>MOCK</td><td>按指定 paperId 的题目顺序与分值完整出一套</td></tr>
  *   <tr><td>REVIEW</td><td>只抽 next_review_at &lt;= now() 的题,可按科目 + 题型筛选</td></tr>
+ *   <tr><td>WRONG</td><td>从还没掌握的错题里随机抽 N 题,不看到期时间,可按科目 + 题型筛选</td></tr>
  *   <tr><td>—</td><td>不带模式,而是给了 questionIds 时:照单出题,上面五种模式都不看</td></tr>
  * </table>
  */
@@ -82,8 +83,9 @@ public class SessionGenerator {
             case "CHAPTER" -> chapter(subjectId, chapterId, typeFilter, n);
             case "MOCK" -> mock(paperId);
             case "REVIEW" -> review(subjectId, typeFilter, n);
+            case "WRONG" -> wrong(subjectId, typeFilter, n);
             default -> throw BusinessException.of(ErrorCode.PARAM_INVALID,
-                    "mode: 只能是 DAILY / RANDOM / CHAPTER / MOCK / REVIEW,当前为 \"" + mode + "\"");
+                    "mode: 只能是 DAILY / RANDOM / CHAPTER / MOCK / REVIEW / WRONG,当前为 \"" + mode + "\"");
         };
     }
 
@@ -235,6 +237,28 @@ public class SessionGenerator {
                 .filter(java.util.Objects::nonNull)
                 .map(q -> new PickedQuestion(q, true, null))
                 .toList();
+    }
+
+    /**
+     * 错题练习:从还没掌握的错题里随机抽,不看排期。
+     *
+     * <p>与 {@link #review} 的差别就是「要不要等到期」。到期复习是每日任务的一部分,
+     * 按排期一道道推进;错题练习是「我现在就想把错题刷一遍」,随机抽才符合预期
+     * —— 否则用户点进来看到「今天没有到期复习的题目」,明明错题本里躺着几百道。
+     */
+    private Picked wrong(Long subjectId, List<String> types, int count) {
+        List<Long> ids = reviewItemRepository.findRandomWrongQuestionIds(1L, subjectId,
+                types != null, types == null ? NO_TYPE_FILTER : types, count);
+        Map<Long, Question> byId = loadQuestions(ids);
+        List<PickedQuestion> picked = ids.stream()
+                .map(byId::get)
+                .filter(java.util.Objects::nonNull)
+                .map(q -> new PickedQuestion(q, true, null))
+                .toList();
+        ensureNotEmpty(picked, types == null
+                ? "错题本里还没有可练习的题,先去练几题吧"
+                : "这个范围下没有这类题型的错题,换一种题型或直接练全部错题吧");
+        return new Picked(null, picked);
     }
 
     private Map<Long, Question> loadQuestions(List<Long> ids) {

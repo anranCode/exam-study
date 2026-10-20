@@ -66,6 +66,17 @@ public class ReviewController {
         return Result.ok(reviewService.typeCounts(subjectId));
     }
 
+    @GetMapping("/wrong-pool/type-counts")
+    @Operation(summary = "错题练习池的题型分布",
+            description = "按题型统计**能抽到**的错题数(只数已发布、且还在 LEARNING 的题),"
+                    + "给自由练习页的「错题练习」下拉用。比 /type-counts 更严格:"
+                    + "待校对的题不进抽题池,这里也不该计数。")
+    @ApiResultResponses
+    public Result<List<ReviewTypeCountVO>> wrongPoolTypeCounts(
+            @Parameter(description = "科目 ID,不传表示全部") @RequestParam(required = false) Long subjectId) {
+        return Result.ok(reviewService.wrongPoolTypeCounts(subjectId));
+    }
+
     @PutMapping("/items/{questionId}/mastered")
     @Operation(summary = "手动标记已掌握",
             description = "把这道题移出复习队列(status 置为 MASTERED)。重复调用不报错。")

@@ -49,7 +49,7 @@ const {
   retry
 } = useAnswerFlow()
 
-const VALID_MODES: PracticeMode[] = ['daily', 'random', 'chapter', 'mock', 'review']
+const VALID_MODES: PracticeMode[] = ['daily', 'random', 'chapter', 'mock', 'review', 'wrong']
 
 const loading = ref(false)
 const startError = ref<string | null>(null)
@@ -105,8 +105,9 @@ async function startNew(modeLower: PracticeMode) {
         }
       }
       if (todayStore.newQuestionQuota > 0) options.count = todayStore.newQuestionQuota
-    } else if (modeLower === 'random') {
-      // 自由练习会带 subjectId / types / count 过来;不带就是原来的「随机 10 题」
+    } else if (modeLower === 'random' || modeLower === 'wrong') {
+      // 自由练习会带 subjectId / types / count 过来;不带就是原来的「随机 10 题」。
+      // 错题练习(wrong)参数完全一样,区别只在后端抽题池:它从错题池随机抽,不看排期。
       options.count = numOrNull(route.query.count) ?? 10
       options.subjectId = subjectId
       const types = String(route.query.types ?? '')
@@ -161,7 +162,11 @@ async function boot() {
   // 错题复习同理:按科目 / 题型挑着练时,必须按新筛选重新组题
   const customReview =
     modeLower === 'review' && (route.query.types != null || route.query.subjectId != null)
-  if (numOrNull(route.query.questionId) != null || customRandom || customReview) {
+  // 错题练习(wrong)每次都是「按当前筛选抽一批新题」,一律重新组题
+  const customWrong =
+    modeLower === 'wrong' &&
+    (route.query.types != null || route.query.subjectId != null || route.query.count != null)
+  if (numOrNull(route.query.questionId) != null || customRandom || customReview || customWrong) {
     store.reset()
     await startNew(modeLower)
     return

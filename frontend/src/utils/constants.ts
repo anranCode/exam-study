@@ -72,7 +72,8 @@ export const PRACTICE_MODE_LABEL: Record<PracticeMode, string> = {
   random: '随机练习',
   chapter: '章节练习',
   mock: '模拟考试',
-  review: '错题复习'
+  review: '错题复习',
+  wrong: '错题练习'
 }
 
 export const PRACTICE_MODE_OPTIONS = (
@@ -85,7 +86,8 @@ export const PRACTICE_MODE_UPPER: Record<PracticeMode, PracticeModeUpper> = {
   random: 'RANDOM',
   chapter: 'CHAPTER',
   mock: 'MOCK',
-  review: 'REVIEW'
+  review: 'REVIEW',
+  wrong: 'WRONG'
 }
 
 /** API 枚举名(大写)→ 路由参数(小写) */
@@ -94,7 +96,8 @@ export const PRACTICE_MODE_LOWER: Record<string, PracticeMode> = {
   RANDOM: 'random',
   CHAPTER: 'chapter',
   MOCK: 'mock',
-  REVIEW: 'review'
+  REVIEW: 'review',
+  WRONG: 'wrong'
 }
 
 /** 判断题固定选项(T 对 / F 错) */

@@ -233,6 +233,33 @@ class SessionGeneratorTest {
     }
 
     @Test
+    @DisplayName("WRONG:从错题池随机抽,不看到期时间,可按题型过滤")
+    void wrongPicksFromWrongPool() {
+        when(reviewItemRepository.findRandomWrongQuestionIds(eq(1L), eq(1L), eq(true),
+                eq(List.of("SINGLE_CHOICE")), eq(10)))
+                .thenReturn(List.of(61L, 62L));
+        when(questionRepository.findAllById(anyIterable())).thenReturn(List.of(q(61), q(62)));
+
+        SessionGenerator.Picked picked = generator.generate("WRONG", 1L, null, 10, null, null,
+                List.of("SINGLE_CHOICE"));
+
+        assertThat(picked.questions()).hasSize(2);
+        // 来自错题池,前端要显示「复习」标识
+        assertThat(picked.questions()).allMatch(SessionGenerator.PickedQuestion::review);
+    }
+
+    @Test
+    @DisplayName("WRONG:错题池为空时给出可读提示,而不是空场次")
+    void wrongEmptyPool() {
+        when(reviewItemRepository.findRandomWrongQuestionIds(any(), any(), anyBoolean(), anyList(), anyInt()))
+                .thenReturn(List.of());
+
+        assertThatThrownBy(() -> generator.generate("WRONG", null, null, 10, null, null, null))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("错题本里还没有可练习的题");
+    }
+
+    @Test
     @DisplayName("未知模式被拒绝,提示里列出合法取值")
     void unknownModeRejected() {
         assertThatThrownBy(() -> generator.generate("EXAM", null, null, 10, null, null, null))

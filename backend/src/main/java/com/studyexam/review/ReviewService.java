@@ -219,6 +219,26 @@ public class ReviewService {
                 .toList();
     }
 
+    /**
+     * 错题练习池的题型分布(只数真能抽到的题)。
+     *
+     * <p>和 {@link #typeCounts} 的差别:这里额外要求题目是 PUBLISHED。
+     * 错题本列表里可以出现待校对的题(以前发布过、后来改回待校对的),
+     * 但它们进不了抽题池;自由练习页的「可练 N 题」若把它们算进去,
+     * 用户就会看到一个比实际能抽到的更大的数字。
+     */
+    @Transactional(readOnly = true)
+    public List<ReviewTypeCountVO> wrongPoolTypeCounts(Long subjectId) {
+        return reviewItemRepository.countWrongPoolGroupedByType(USER_ID, subjectId).stream()
+                .map(row -> {
+                    String type = String.valueOf(row[0]);
+                    long count = ((Number) row[1]).longValue();
+                    String label = QuestionType.find(type).map(QuestionType::getLabel).orElse(type);
+                    return new ReviewTypeCountVO(type, label, count);
+                })
+                .toList();
+    }
+
     /** 手动标记已掌握:直接出队。已经是 MASTERED 再调不报错(幂等)。 */
     @Transactional
     public void markMastered(Long questionId) {
