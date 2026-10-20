@@ -536,9 +536,14 @@ public class PracticeService {
         int answered = session.getAnsweredCount();
         int total = session.getTotalCount();
         AnswerProgressVO progress = new AnswerProgressVO(answered, session.getCorrectCount(), total);
-        LocalDateTime nextReviewAt = reviewItemRepository
-                .findByUserIdAndQuestionId(USER_ID, question.getId())
-                .map(ReviewItem::getNextReviewAt).orElse(null);
+        ReviewItem item = reviewItemRepository
+                .findByUserIdAndQuestionId(USER_ID, question.getId()).orElse(null);
+        LocalDateTime nextReviewAt = item == null ? null : item.getNextReviewAt();
+        int wrongCount = item == null ? 0 : item.getWrongCount();
+        int correctStreak = item == null ? 0 : item.getCorrectStreak();
+        // 「本次作答让这道题移出了错题本」= 答对了且当前处于已掌握状态
+        boolean mastered = item != null && "MASTERED".equals(item.getStatus())
+                && Boolean.TRUE.equals(record.getIsCorrect());
 
         return new AnswerResultVO(
                 question.getId(),
@@ -550,6 +555,9 @@ public class PracticeService {
                 isReview,
                 record.getSelfScore(),
                 record.getTotalPoints(),
+                wrongCount,
+                correctStreak,
+                mastered,
                 progress);
     }
 

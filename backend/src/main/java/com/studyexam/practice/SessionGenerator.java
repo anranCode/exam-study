@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  *   <tr><td>RANDOM</td><td>指定科目/章节范围内随机 N 题,不看复习排期</td></tr>
  *   <tr><td>CHAPTER</td><td>指定章节内随机 N 题</td></tr>
  *   <tr><td>MOCK</td><td>按指定 paperId 的题目顺序与分值完整出一套</td></tr>
- *   <tr><td>REVIEW</td><td>只抽 next_review_at &lt;= now() 的题</td></tr>
+ *   <tr><td>REVIEW</td><td>只抽 next_review_at &lt;= now() 的题,可按科目 + 题型筛选</td></tr>
  *   <tr><td>—</td><td>不带模式,而是给了 questionIds 时:照单出题,上面五种模式都不看</td></tr>
  * </table>
  */
@@ -81,7 +81,7 @@ public class SessionGenerator {
             case "RANDOM" -> random(subjectId, chapterId, typeFilter, n);
             case "CHAPTER" -> chapter(subjectId, chapterId, typeFilter, n);
             case "MOCK" -> mock(paperId);
-            case "REVIEW" -> review(subjectId, n);
+            case "REVIEW" -> review(subjectId, typeFilter, n);
             default -> throw BusinessException.of(ErrorCode.PARAM_INVALID,
                     "mode: 只能是 DAILY / RANDOM / CHAPTER / MOCK / REVIEW,当前为 \"" + mode + "\"");
         };
@@ -201,15 +201,30 @@ public class SessionGenerator {
         return new Picked(paper.getId(), picked);
     }
 
-    private Picked review(Long subjectId, int count) {
-        List<PickedQuestion> picked = duePicked(subjectId, count);
-        ensureNotEmpty(picked, "今天没有到期复习的题目,先去练几题吧");
+    /**
+     * 错题复习:只抽已到期的错题,可按科目 + 题型筛。
+     *
+     * <p>错题本支持「按科目、题型挑着复习」,所以题型过滤必须在这里生效 ——
+     * 否则用户在下拉里选了「单项选择题」,实际发下来的却是一堆简答题。
+     */
+    private Picked review(Long subjectId, List<String> types, int count) {
+        List<PickedQuestion> picked = duePicked(subjectId, types, count);
+        ensureNotEmpty(picked, types == null
+                ? "今天没有到期复习的题目,先去练几题吧"
+                : "这个范围内今天没有到期的这类题型,换一种题型或直接练全部错题吧");
         return new Picked(null, picked);
     }
 
-    /** 到期复习池:next_review_at <= now() 的题,按到期先后排序。 */
+    /** 到期复习池(不限题型)。 */
     private List<PickedQuestion> duePicked(Long subjectId, int count) {
-        List<Long> ids = reviewItemRepository.findDueQuestionIds(1L, subjectId, LocalDateTime.now(), count);
+        return duePicked(subjectId, null, count);
+    }
+
+    /** 到期复习池:next_review_at <= now() 的题,错得多的排前面,可按题型过滤。 */
+    private List<PickedQuestion> duePicked(Long subjectId, List<String> types, int count) {
+        List<Long> ids = reviewItemRepository.findDueQuestionIds(1L, subjectId,
+                types != null, types == null ? NO_TYPE_FILTER : types,
+                LocalDateTime.now(), count);
         if (ids.isEmpty()) {
             return List.of();
         }

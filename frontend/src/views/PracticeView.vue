@@ -1,7 +1,10 @@
 <script setup lang="ts">
 /**
  * 刷题页(阶段 4 ★ 核心)。三段式:顶部进度 → 题干与选项(可滚动)→ 底部固定操作区。
- * 逐题立即提交,提交失败停留在当前题并给出重试;判定后不可改选;主观题单独分支。
+ *
+ * <p>交互逻辑:点选项即判定 —— 答对自动进入下一题(1.2 秒后,也可手动点),
+ * 答错停留在当前题由用户自己点「下一题」;另有「不知道」直接看答案并记入错题本。
+ * 提交失败停留在当前题并给出重试;判定后不可改选;主观题单独分支。
  */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -24,6 +27,7 @@ const todayStore = useTodayStore()
 const {
   question,
   isSubjective,
+  autoSubmit,
   record,
   graded,
   submitting,
@@ -34,8 +38,10 @@ const {
   answerPoints,
   selfScored,
   submitError,
+  autoNextPending,
   select,
   submit,
+  giveUp,
   revealPoints,
   togglePoint,
   submitSelf,
@@ -49,6 +55,11 @@ const loading = ref(false)
 const startError = ref<string | null>(null)
 const noQuestions = ref(false)
 let timer: ReturnType<typeof setInterval> | null = null
+/** 答对后自动翻页的定时器 */
+let autoNextTimer: ReturnType<typeof setTimeout> | null = null
+
+/** 答对后停留多久再自动翻页:够看清「答对了」,又不至于让人觉得卡住 */
+const AUTO_NEXT_DELAY = 1200
 
 const modeParam = computed(() => String(route.params.mode ?? '').toLowerCase())
 const modeLabel = computed(() => PRACTICE_MODE_LABEL[modeParam.value as PracticeMode] ?? '练习')
@@ -111,6 +122,14 @@ async function startNew(modeLower: PracticeMode) {
       // 错题本里「立即复习」某一道:直接点名这一题,后端会忽略组题模式照单出题
       const questionId = numOrNull(route.query.questionId)
       if (questionId != null) options.questionIds = [questionId]
+      // 错题本支持「按科目 + 题型」挑着复习:不带 questionId 时这两个筛选要传给后端
+      const types = String(route.query.types ?? '')
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+      if (types.length) options.types = types
+      const count = numOrNull(route.query.count)
+      if (count != null) options.count = count
     } else if (modeLower === 'mock') {
       options.paperId = paperId
     }
@@ -139,7 +158,10 @@ async function boot() {
   const customRandom =
     modeLower === 'random' &&
     (route.query.types != null || route.query.subjectId != null || route.query.count != null)
-  if (numOrNull(route.query.questionId) != null || customRandom) {
+  // 错题复习同理:按科目 / 题型挑着练时,必须按新筛选重新组题
+  const customReview =
+    modeLower === 'review' && (route.query.types != null || route.query.subjectId != null)
+  if (numOrNull(route.query.questionId) != null || customRandom || customReview) {
     store.reset()
     await startNew(modeLower)
     return
@@ -181,6 +203,7 @@ async function boot() {
 }
 
 async function onNext() {
+  clearAutoNext()
   const summary = await next()
   if (summary) {
     await router.push({
@@ -190,9 +213,38 @@ async function onNext() {
   }
 }
 
+function clearAutoNext() {
+  if (autoNextTimer) {
+    clearTimeout(autoNextTimer)
+    autoNextTimer = null
+  }
+}
+
+/**
+ * 答对就自动进入下一题。
+ *
+ * <p>只认 useAnswerFlow 里的 autoNextPending(由「刚刚提交成功且答对」置位),
+ * 不用「当前题已有判定结果」推导 —— 否则刷新恢复或回看已答题时会自己跳走。
+ */
+watch(autoNextPending, (pending) => {
+  clearAutoNext()
+  if (!pending) return
+  autoNextTimer = setTimeout(() => {
+    autoNextTimer = null
+    void onNext()
+  }, AUTO_NEXT_DELAY)
+})
+
+/** 输入框回车直接提交(填空类) */
+function onSubmitFill() {
+  if (!canConfirm.value || submitting.value) return
+  void submit('SURE')
+}
+
 watch(
   () => store.currentIndex,
   () => {
+    clearAutoNext()
     if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
   }
 )
@@ -220,6 +272,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
+  clearAutoNext()
 })
 </script>
 
@@ -276,6 +329,7 @@ onUnmounted(() => {
           :selected-keys="selectedKeys"
           :record="record"
           @select="select"
+          @submit="onSubmitFill"
         />
 
         <!-- 主观题分支 -->
@@ -350,6 +404,16 @@ onUnmounted(() => {
           <button v-else type="button" class="btn btn--primary btn--block" @click="onNext">
             {{ nextLabel }}
           </button>
+          <!-- 主观题也能直接认输:按 0 分自评并展开参考答案,同时记入错题本 -->
+          <button
+            v-if="!graded"
+            type="button"
+            class="btn btn--ghost"
+            :disabled="submitting"
+            @click="giveUp"
+          >
+            不知道
+          </button>
         </template>
 
         <template v-else>
@@ -357,19 +421,22 @@ onUnmounted(() => {
             <button
               type="button"
               class="btn btn--ghost"
-              :disabled="!canConfirm || submitting"
-              @click="submit('UNSURE')"
+              :disabled="submitting"
+              @click="giveUp"
             >
-              不太确定,先看答案
+              不知道
             </button>
+            <!-- 单选 / 判断类点选项即判定,不需要提交按钮;多选与填空仍需显式提交 -->
             <button
+              v-if="!autoSubmit"
               type="button"
               class="btn btn--primary"
               :disabled="!canConfirm || submitting"
               @click="submit('SURE')"
             >
-              确认
+              提交答案
             </button>
+            <p v-else class="practice__tip">点选项立即判定,答对自动进入下一题</p>
           </template>
           <button v-else type="button" class="btn btn--primary btn--block" @click="onNext">
             {{ nextLabel }}
@@ -444,6 +511,15 @@ onUnmounted(() => {
   text-align: center;
   color: var(--text-secondary);
   font-size: var(--font-size-body);
+}
+
+.practice__tip {
+  flex: 1 1 auto;
+  align-self: center;
+  font-size: var(--font-size-aux);
+  line-height: var(--line-height-aux);
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .practice__state {
@@ -566,6 +642,7 @@ onUnmounted(() => {
   bottom: 0;
   z-index: 20;
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-sm);
   margin-top: auto;
   padding: var(--space-sm) 0 var(--space-md);
@@ -575,8 +652,13 @@ onUnmounted(() => {
 
 @media (max-width: 767.98px) {
   .practice__actions {
-    /* 让拇指可及,同时不遮住底部 Tab */
-    bottom: var(--tabbar-height);
+    /*
+     * 手机上没有底部 Tab(练习页是 single 布局),操作区就该贴屏幕底部。
+     * 之前这里留了 tabbar 的高度,软键盘弹出时 sticky 元素被顶来顶去,
+     * 是页面「跳一下」的原因之一。
+     */
+    bottom: 0;
+    padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
   }
 }
 

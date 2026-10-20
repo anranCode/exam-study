@@ -23,6 +23,7 @@ public record ReviewItemVO(
         @Schema(description = "题型中文名", example = "单项选择题") String typeLabel,
         @Schema(description = "题干") String stem,
         @Schema(description = "累计答错次数", example = "3") int wrongCount,
+        @Schema(description = "连续答对次数;满 3 次自动移出错题本", example = "1") int correctStreak,
         @Schema(description = "SM-2 复习阶段,0 表示新错题", example = "2") int stage,
         @Schema(description = "当前间隔天数", example = "3") int intervalDays,
         @Schema(description = "难度系数 1.30—3.00", example = "2.50") BigDecimal easeFactor,

@@ -245,6 +245,12 @@ export interface AnswerResultVO {
   isReview: boolean
   selfScore: number | null
   totalPoints: number | null
+  /** 该题累计答错次数(错题本按它倒序) */
+  wrongCount: number
+  /** 当前连续答对次数;满 3 次自动移出错题本 */
+  correctStreak: number
+  /** 本次作答是否让该题移出了错题本 */
+  mastered: boolean
   progress: AnswerProgressVO
 }
 
@@ -515,6 +521,8 @@ export interface ReviewItemVO {
   typeLabel: string
   stem: string
   wrongCount: number
+  /** 连续答对次数;满 3 次自动移出错题本 */
+  correctStreak: number
   stage: number
   intervalDays: number
   easeFactor: number
@@ -528,11 +536,20 @@ export interface ReviewItemVO {
 
 export interface ReviewItemQuery {
   subjectId?: number
+  /** 题型筛选,不传表示全部 */
+  type?: QuestionType | string
   status?: ReviewQueueStatus
   /** 只看已到期的 */
   due?: boolean
   page?: number
   size?: number
+}
+
+/** 错题本题型分布(按题型复习的下拉用) */
+export interface ReviewTypeCountVO {
+  type: string
+  typeLabel: string
+  count: number
 }
 
 /** 某题型「可练习」的题数(只数已发布的),自由练习的题型下拉用 */

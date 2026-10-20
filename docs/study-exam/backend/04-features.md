@@ -116,7 +116,7 @@
 |---|---|
 | `WRONG` | `stage = 0`,`interval = 1`,`wrong_count++`,`correct_streak = 0`,`ease_factor -= 0.2`(下限 1.30) |
 | `UNSURE` | `stage` 不变,`interval = 1`,`next_review_at = 今天 + 1 天` |
-| `SURE` | `correct_streak++`,`stage++`,`interval = (stage == 1 ? 1 : round(interval * easeFactor))`;`stage >= 4` 时 `status = MASTERED` |
+| `SURE` | `correct_streak++`,`stage++`,`interval = (stage == 1 ? 1 : round(interval * easeFactor))`;`correct_streak >= 3` 时 `status = MASTERED`(连续答对三次即移出错题本) |
 
 3. **间隔上限 60 天**,`ease_factor` 上下限 `1.30—3.00`。
 4. `GET /review/due-summary` 与 `GET /review/items`。
@@ -124,7 +124,7 @@
 
 **验收标准**
 
-- 写单元测试覆盖 `Sm2Scheduler`,至少五个用例:首次答错、连续答对时阶段推进、答对但没把握时 `interval` 回到 1、阶段达到 4 后 `status = MASTERED`、`ease_factor` 不越界。
+- 写单元测试覆盖 `Sm2Scheduler`,至少六个用例:首次答错、连续答对时阶段推进、答对但没把握时 `interval` 回到 1、连对满 3 次后 `status = MASTERED`、连对被打断后重新计数、`ease_factor` 不越界。
 
 **间隔推演的基准(以初始 `interval = 1`、`ease_factor = 2.5` 为例,测试断言照这个写)**:
 
@@ -134,8 +134,11 @@
 | 1 | `UNSURE` | 0 | 1 | 明天 |
 | 1 | `SURE` | 1 | 1 | 明天 |
 | 2 | `SURE` | 2 | `round(1 × 2.5) = 3` | 3 天后 |
-| 3 | `SURE` | 3 | `round(3 × 2.5) = 8` | 8 天后 |
-| 4 | `SURE` | 4 | — | 标记 `MASTERED`,移出队列 |
+| 3 | `SURE` | 3 | `round(3 × 2.5) = 8` | 连对满 3 次 → 标记 `MASTERED`,移出队列 |
+
+「连对三次出队」看的是 `correct_streak`,不是 `stage`。`UNSURE` 的答对(蒙对)会让 `correct_streak` 清零,
+所以靠蒙题出不掉;出队只把 `status` 改成 `MASTERED`,该题仍能在错题本「已掌握」里看到,之后再答错会回到 `LEARNING`。
+错题本列表按 `wrong_count DESC` 排序,错得最多的排最前面;题型筛选用 `?type=`,非法值直接报错而不是静默返回全部。
 
 - `GET /review/due-summary` 返回的数字与 `review_item` 表里 `next_review_at <= now()` 的行数一致。
 

@@ -67,7 +67,7 @@ class SessionGeneratorTest {
     @Test
     @DisplayName("DAILY:到期复习题优先,差额用新题补齐")
     void dailyPutsDueFirstThenFillsWithNew() {
-        when(reviewItemRepository.findDueQuestionIds(eq(1L), any(), any(), anyInt()))
+        when(reviewItemRepository.findDueQuestionIds(eq(1L), any(), anyBoolean(), anyList(), any(), anyInt()))
                 .thenReturn(List.of(10L, 11L));
         when(questionRepository.findAllById(anyIterable()))
                 .thenReturn(List.of(q(10), q(11)));
@@ -87,7 +87,8 @@ class SessionGeneratorTest {
     @Test
     @DisplayName("DAILY:没有到期题也没有新题时退回随机抽,不空转")
     void dailyFallsBackToRandomWhenPoolEmpty() {
-        when(reviewItemRepository.findDueQuestionIds(any(), any(), any(), anyInt())).thenReturn(List.of());
+        when(reviewItemRepository.findDueQuestionIds(any(), any(), anyBoolean(), anyList(), any(), anyInt()))
+                .thenReturn(List.of());
         when(questionRepository.pickNew(any(), any(), anyList(), anyInt())).thenReturn(List.of());
         when(questionRepository.pickRandom(any(), any(), anyBoolean(), anyList(), anyList(), anyInt()))
                 .thenReturn(List.of(q(30), q(31)));
@@ -200,7 +201,7 @@ class SessionGeneratorTest {
     @Test
     @DisplayName("REVIEW:只抽到期的题;一道都没有时给出可读提示")
     void reviewOnlyDue() {
-        when(reviewItemRepository.findDueQuestionIds(any(), isNull(), any(), anyInt()))
+        when(reviewItemRepository.findDueQuestionIds(any(), isNull(), anyBoolean(), anyList(), any(), anyInt()))
                 .thenReturn(List.of(41L));
         when(questionRepository.findAllById(anyIterable())).thenReturn(List.of(q(41)));
 
@@ -208,10 +209,27 @@ class SessionGeneratorTest {
         assertThat(picked.questions()).hasSize(1);
         assertThat(picked.questions().get(0).review()).isTrue();
 
-        when(reviewItemRepository.findDueQuestionIds(any(), isNull(), any(), anyInt())).thenReturn(List.of());
+        when(reviewItemRepository.findDueQuestionIds(any(), isNull(), anyBoolean(), anyList(), any(), anyInt()))
+                .thenReturn(List.of());
         assertThatThrownBy(() -> generator.generate("REVIEW", null, null, 10, null, null, null))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("没有到期复习");
+    }
+
+    @Test
+    @DisplayName("REVIEW:带题型时按题型过滤(错题本按题型复习)")
+    void reviewAppliesTypeFilter() {
+        when(reviewItemRepository.findDueQuestionIds(any(), any(), eq(true),
+                eq(List.of("SINGLE_CHOICE")), any(), anyInt()))
+                .thenReturn(List.of(51L));
+        when(questionRepository.findAllById(anyIterable())).thenReturn(List.of(q(51)));
+
+        SessionGenerator.Picked picked = generator.generate("REVIEW", 1L, null, 10, null, null,
+                List.of("SINGLE_CHOICE"));
+
+        assertThat(picked.questions()).hasSize(1);
+        verify(reviewItemRepository).findDueQuestionIds(eq(1L), eq(1L), eq(true),
+                eq(List.of("SINGLE_CHOICE")), any(), eq(10));
     }
 
     @Test

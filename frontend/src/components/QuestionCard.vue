@@ -22,7 +22,11 @@ const props = defineProps<{
   record: AnswerRecord | null
 }>()
 
-const emit = defineEmits<{ (e: 'select', key: string): void }>()
+const emit = defineEmits<{
+  (e: 'select', key: string): void
+  /** 填空类回车:直接提交,不用再去点按钮 */
+  (e: 'submit'): void
+}>()
 
 const typeLabel = computed(
   () =>
@@ -108,6 +112,8 @@ const graded = computed(() => !!props.record)
         maxlength="100"
         placeholder="填入正确形式"
         class="question-card__fill-input"
+        enterkeyhint="done"
+        @keyup.enter="emit('submit')"
       />
       <p v-if="!graded" class="question-card__fill-hint">
         只需填这一空的词(括号里给的是词根),不用抄整句。

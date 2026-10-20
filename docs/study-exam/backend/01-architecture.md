@@ -136,8 +136,12 @@ SM-2 算法的简化实现。每题维护 `stage`(复习阶段)、`interval_days
   答对且没把握 → stage 不变, interval = 1, next_review_at = 今天 + 1 天
   答对且确定   → stage += 1
                 interval = (stage == 1) ? 1 : round(interval * easeFactor)
-                若 stage >= 4 且连续答对 → 标记 MASTERED,移出复习队列
+                若 continuous_streak >= 3 → 标记 MASTERED,移出复习队列
 ```
+
+「连续答对三次即出队」是产品规则(`Sm2Scheduler.MASTER_STREAK = 3`),不看 `stage`。
+出队只是把 `status` 置为 `MASTERED`、留在「已掌握」筛选里,不是删行——之后再答错会回到 `LEARNING`。
+`confidence = UNSURE` 的答对(蒙对)不计入连对,`correct_streak` 直接清零。
 
 提交答案时前端传 `confidence`(`SURE` / `UNSURE` / `WRONG`)三态,而不是只有对错。这是让排期准确的关键——「蒙对的题」必须回到队列。
 

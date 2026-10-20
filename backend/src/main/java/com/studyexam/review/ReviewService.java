@@ -10,6 +10,7 @@ import com.studyexam.question.QuestionRepository;
 import com.studyexam.question.QuestionType;
 import com.studyexam.review.dto.DueSummaryVO;
 import com.studyexam.review.dto.ReviewItemVO;
+import com.studyexam.review.dto.ReviewTypeCountVO;
 import com.studyexam.setting.TableAvailability;
 import com.studyexam.subject.Subject;
 import com.studyexam.subject.SubjectRepository;
@@ -92,27 +93,42 @@ public class ReviewService {
     // ── 错题本 ──────────────────────────────────────────────
 
     /**
-     * 错题本列表。三个筛选都可选:科目、队列状态、是否只要到期的。
+     * 错题本列表。四个筛选都可选:科目、题型、队列状态、是否只要到期的。
      *
      * <p>{@code due} 是文档之外补的参数:前端要按「是否到期」筛,而只有 {@code status + subjectId}
-     * 时这个筛选只能在前端本地做,一分页就不准了。
+     * 时这个筛选只能在前端本地做,一分页就不准了。{@code type} 同理,用于「只复习某一种题型」。
+     *
+     * <p>排序由 {@link ReviewItemRepository#findIdsForList} 决定:答错次数多的排最前面。
      */
     @Transactional(readOnly = true)
-    public PageResult<ReviewItemVO> listItems(Long subjectId, String status, Boolean due,
+    public PageResult<ReviewItemVO> listItems(Long subjectId, String type, String status, Boolean due,
                                               Integer page, Integer size) {
         int p = page == null || page < 1 ? 1 : page;
         int s = size == null || size < 1 ? DEFAULT_PAGE_SIZE : Math.min(size, MAX_PAGE_SIZE);
         boolean dueOnly = Boolean.TRUE.equals(due);
         String queueStatus = normalizeStatus(status);
+        String questionType = normalizeType(type);
         LocalDateTime now = LocalDateTime.now();
 
-        long total = reviewItemRepository.countForList(USER_ID, subjectId, queueStatus, dueOnly, now);
+        long total = reviewItemRepository.countForList(USER_ID, subjectId, questionType,
+                queueStatus, dueOnly, now);
         if (total == 0) {
             return PageResult.empty(p, s);
         }
         List<Long> ids = reviewItemRepository.findIdsForList(
-                USER_ID, subjectId, queueStatus, dueOnly, now, s, (p - 1) * s);
+                USER_ID, subjectId, questionType, queueStatus, dueOnly, now, s, (p - 1) * s);
         return PageResult.of(assemble(ids, now), total, p, s);
+    }
+
+    /** 题型只认已知取值;空表示不限。写错就报错,避免「以为筛了其实全选」。 */
+    private String normalizeType(String type) {
+        if (type == null || type.isBlank()) {
+            return null;
+        }
+        String t = type.trim().toUpperCase();
+        QuestionType.find(t).orElseThrow(() -> BusinessException.of(ErrorCode.PARAM_INVALID,
+                "type: 未知题型 \"" + type + "\""));
+        return t;
     }
 
     /** 状态取值只认 LEARNING / MASTERED;空表示不限。写错就报错,别静默返回空列表。 */
@@ -172,6 +188,7 @@ public class ReviewService {
                 QuestionType.find(q.getType()).map(QuestionType::getLabel).orElse(q.getType()),
                 q.getStem(),
                 item.getWrongCount(),
+                item.getCorrectStreak(),
                 item.getStage(),
                 item.getIntervalDays(),
                 item.getEaseFactor(),
@@ -181,6 +198,25 @@ public class ReviewService {
                 item.getLastReviewAt(),
                 item.getNextReviewAt(),
                 item.getNextReviewAt() != null && !item.getNextReviewAt().isAfter(now));
+    }
+
+    /**
+     * 错题本可选的题型清单(只列当前筛选范围内真有错题的题型)。
+     *
+     * <p>给前端「按题型复习」的下拉用:不传科目时是全部错题的题型,
+     * 传了科目就是该科目下的题型。
+     */
+    @Transactional(readOnly = true)
+    public List<ReviewTypeCountVO> typeCounts(Long subjectId) {
+        String status = STATUS_LEARNING;
+        return reviewItemRepository.countGroupedByType(USER_ID, subjectId, status).stream()
+                .map(row -> {
+                    String type = String.valueOf(row[0]);
+                    long count = ((Number) row[1]).longValue();
+                    String label = QuestionType.find(type).map(QuestionType::getLabel).orElse(type);
+                    return new ReviewTypeCountVO(type, label, count);
+                })
+                .toList();
     }
 
     /** 手动标记已掌握:直接出队。已经是 MASTERED 再调不报错(幂等)。 */

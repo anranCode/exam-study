@@ -20,6 +20,7 @@ import { useTodayStore } from '@/stores/today'
 import { useSubjectStore } from '@/stores/subject'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { formatShortDate } from '@/utils/date'
+import { MASTER_STREAK } from '@/utils/constants'
 import type { ReviewItemVO, ReviewQueueStatus } from '@/api/types'
 
 const router = useRouter()
@@ -64,6 +65,10 @@ const subjectFilter = computed({
   get: () => store.filters.subjectId,
   set: (v: number | null) => store.setFilters({ subjectId: v })
 })
+const typeFilter = computed({
+  get: () => store.filters.type,
+  set: (v: string | null) => store.setFilters({ type: v })
+})
 const statusFilter = computed({
   get: () => store.filters.status,
   set: (v: ReviewQueueStatus | null) => store.setFilters({ status: v })
@@ -73,10 +78,11 @@ const dueOnly = computed({
   set: (v: boolean) => store.setFilters({ dueOnly: v })
 })
 
-/** 是否偏离了默认视图(全部科目 / 只看未掌握 / 不限到期) */
+/** 是否偏离了默认视图(全部科目 / 全部题型 / 只看未掌握 / 不限到期) */
 const filtersTouched = computed(
   () =>
     store.filters.subjectId !== null ||
+    store.filters.type !== null ||
     store.filters.status !== 'LEARNING' ||
     store.filters.dueOnly
 )
@@ -90,10 +96,29 @@ function nextReviewText(item: ReviewItemVO): string {
   return `${formatShortDate(item.nextReviewAt)}复习`
 }
 
+/**
+ * 「开始复习」:带上当前的科目 / 题型筛选。
+ *
+ * 错题本按科目、题型挑着练是这个页面的核心用法 —— 只练某一科的单选题,
+ * 比把所有错题混在一起做有效得多。没选筛选就是全部到期错题。
+ */
 function startReview() {
-  // 顶部按钮:进入错题复习模式,练所有到期的题
-  router.push('/practice/review')
+  const query: Record<string, string> = {}
+  if (store.filters.subjectId != null) query.subjectId = String(store.filters.subjectId)
+  if (store.filters.type) query.types = store.filters.type
+  router.push({ path: '/practice/review', query })
 }
+
+/** 当前筛选下还能复习几道(用于按钮文案;不限到期时按筛选结果计) */
+const reviewScopeText = computed(() => {
+  const parts: string[] = []
+  const subject = subjectStore.subjects.find((s) => s.id === store.filters.subjectId)
+  if (subject) parts.push(subject.shortName || subject.name)
+  const type = store.typeCounts.find((t) => t.type === store.filters.type)
+  if (type) parts.push(type.typeLabel)
+  if (parts.length === 0) return '全部到期错题'
+  return `${parts.join(' · ')} 到期错题`
+})
 
 /** 单条「立即复习」:只做这一道(后端按 questionIds 照单出题) */
 function redoOne(item: ReviewItemVO) {
@@ -141,7 +166,7 @@ async function removeItem(item: ReviewItemVO) {
 }
 
 async function init() {
-  await Promise.all([store.fetch(), todayStore.refresh()])
+  await Promise.all([store.fetch(), store.fetchTypeCounts(), todayStore.refresh()])
   if (subjectStore.subjects.length === 0) {
     try {
       await subjectStore.fetchSubjects()
@@ -174,6 +199,7 @@ onMounted(init)
         <span>开始复习</span>
       </button>
     </div>
+    <p class="wrong__scope">{{ reviewScopeText }}</p>
 
     <!-- 筛选 -->
     <div class="wrong__filters card">
@@ -183,6 +209,21 @@ onMounted(init)
           :key="s.id"
           :label="s.shortName"
           :value="s.id"
+        />
+      </el-select>
+      <!-- 按题型复习:只练某一类题(如只练单选) -->
+      <el-select
+        v-model="typeFilter"
+        placeholder="全部题型"
+        clearable
+        class="filter-item"
+        :disabled="store.typeCounts.length === 0"
+      >
+        <el-option
+          v-for="t in store.typeCounts"
+          :key="t.type"
+          :label="`${t.typeLabel}(${t.count})`"
+          :value="t.type"
         />
       </el-select>
       <el-select v-model="statusFilter" placeholder="全部状态" clearable class="filter-item">
@@ -232,6 +273,15 @@ onMounted(init)
             <p class="wrong-item__meta">
               <span>错 {{ item.wrongCount }} 次</span>
               <span class="wrong-item__dot">·</span>
+              <span v-if="item.status === 'LEARNING' && item.correctStreak > 0">
+                连对 {{ item.correctStreak }}/{{ MASTER_STREAK }}
+              </span>
+              <span
+                v-if="item.status === 'LEARNING' && item.correctStreak > 0"
+                class="wrong-item__dot"
+              >
+                ·
+              </span>
               <span>{{ nextReviewText(item) }}</span>
             </p>
 

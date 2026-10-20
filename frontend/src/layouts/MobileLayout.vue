@@ -63,14 +63,22 @@ function badgeFor(tab: TabItem): number {
 
 <style scoped>
 .mobile-layout {
+  /*
+   * 用 100svh 而不是 100vh:手机浏览器地址栏收起/展开、软键盘弹出时,
+   * 100vh 恒定不变,常被地址栏或键盘盖住一截,导致底部操作区被顶出去。
+   * 不支持 svh 的老浏览器退回 dvh / vh。
+   */
   min-height: 100vh;
   min-height: 100dvh;
+  min-height: 100svh;
   background-color: var(--bg-page);
 }
 
 .mobile-layout__content {
   padding: var(--page-padding);
   padding-bottom: calc(var(--tabbar-height) + var(--space-lg) + env(safe-area-inset-bottom));
+  /* 输入框聚焦时横向不抖动 */
+  overflow-x: clip;
 }
 
 /* 没有底部 Tab 时不必给 Tab 留位置 */

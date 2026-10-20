@@ -1,5 +1,11 @@
 import { http } from './request'
-import type { DueSummaryVO, PageResult, ReviewItemQuery, ReviewItemVO } from './types'
+import type {
+  DueSummaryVO,
+  PageResult,
+  ReviewItemQuery,
+  ReviewItemVO,
+  ReviewTypeCountVO
+} from './types'
 
 const BASE = '/v1'
 
@@ -16,6 +22,13 @@ export function getReviewItems(query: ReviewItemQuery = {}): Promise<PageResult<
     if (params[key] === undefined || params[key] === '') delete params[key]
   }
   return http.get<PageResult<ReviewItemVO>>(`${BASE}/review/items`, { params })
+}
+
+/** GET /review/type-counts —— 错题本题型分布(只数未掌握的),给「按题型复习」的下拉用 */
+export function getReviewTypeCounts(subjectId?: number): Promise<ReviewTypeCountVO[]> {
+  const params: Record<string, unknown> = {}
+  if (subjectId != null) params.subjectId = subjectId
+  return http.get<ReviewTypeCountVO[]>(`${BASE}/review/type-counts`, { params })
 }
 
 /** PUT /review/items/{questionId}/mastered —— 手动标记已掌握(出队) */

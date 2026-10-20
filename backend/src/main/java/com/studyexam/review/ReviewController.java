@@ -5,6 +5,7 @@ import com.studyexam.common.PageResult;
 import com.studyexam.common.Result;
 import com.studyexam.review.dto.DueSummaryVO;
 import com.studyexam.review.dto.ReviewItemVO;
+import com.studyexam.review.dto.ReviewTypeCountVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/review")
@@ -37,18 +40,30 @@ public class ReviewController {
 
     @GetMapping("/items")
     @Operation(summary = "错题本列表",
-            description = "复习队列,按下次复习时间升序(最该复习的排前面)。"
-                    + "可按科目、队列状态、是否到期筛选。"
+            description = "复习队列,答错次数多的排最前面,同错次按下次复习时间升序。"
+                    + "可按科目、题型、队列状态、是否到期筛选。"
                     + "响应**不含答案与解析** —— 要看答案是点进去重做,不是在这里看。")
     @ApiResultResponses
     public Result<PageResult<ReviewItemVO>> listItems(
             @Parameter(description = "科目 ID,不传表示全部") @RequestParam(required = false) Long subjectId,
+            @Parameter(description = "题型(如 SINGLE_CHOICE),不传表示全部")
+            @RequestParam(required = false) String type,
             @Parameter(description = "队列状态:LEARNING 在队列 / MASTERED 已掌握;不传表示不限")
             @RequestParam(required = false) String status,
             @Parameter(description = "只看已到期的") @RequestParam(required = false) Boolean due,
             @Parameter(description = "页码,从 1 开始") @RequestParam(required = false) Integer page,
             @Parameter(description = "每页条数,最大 200") @RequestParam(required = false) Integer size) {
-        return Result.ok(reviewService.listItems(subjectId, status, due, page, size));
+        return Result.ok(reviewService.listItems(subjectId, type, status, due, page, size));
+    }
+
+    @GetMapping("/type-counts")
+    @Operation(summary = "错题本题型分布",
+            description = "按题型统计还在队列里的错题数,给「按题型复习」的下拉用。"
+                    + "只数 LEARNING 状态,已掌握的不出现。")
+    @ApiResultResponses
+    public Result<List<ReviewTypeCountVO>> typeCounts(
+            @Parameter(description = "科目 ID,不传表示全部") @RequestParam(required = false) Long subjectId) {
+        return Result.ok(reviewService.typeCounts(subjectId));
     }
 
     @PutMapping("/items/{questionId}/mastered")

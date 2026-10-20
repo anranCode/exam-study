@@ -14,13 +14,19 @@ import java.time.LocalTime;
  *   <tr><th>作答情况(confidence)</th><th>处理</th></tr>
  *   <tr><td>WRONG</td><td>stage = 0,interval = 1,wrong_count++,
  *       correct_streak = 0,ease_factor -= 0.2(下限 1.30)</td></tr>
- *   <tr><td>UNSURE</td><td>stage 不变,interval = 1,next_review_at = 今天 + 1 天</td></tr>
+ *   <tr><td>UNSURE</td><td>stage 不变,interval = 1,next_review_at = 今天 + 1 天,
+ *       correct_streak = 0(没把握不算「连对」)</td></tr>
  *   <tr><td>SURE</td><td>correct_streak++,stage++,
  *       interval = (stage == 1 ? 1 : round(interval × ease_factor));
- *       stage ≥ 4 时 status = MASTERED</td></tr>
+ *       correct_streak ≥ 3 时 status = MASTERED,自动移出错题本</td></tr>
  * </table>
  *
  * 间隔上限 60 天,ease_factor 上下限 1.30—3.00。
+ *
+ * <p>「连续答对三次即出队」是本项目的产品规则(比原 SM-2 的 stage ≥ 4 更早出队):
+ * 一道错题连着三次答对,说明已经记牢,继续占用每日复习额度只会浪费时间。
+ * 出队用的是 MASTERED 状态而不是删行 —— 用户仍可在错题本「已掌握」筛选里看到它;
+ * 之后再答错,{@link #apply} 会把它打回 LEARNING 重新入队。
  *
  * <p>纯函数式实现,不依赖 Spring 容器,便于单元测试——这是「算错了会影响学习效果」的逻辑。
  */
@@ -30,8 +36,8 @@ public class Sm2Scheduler {
     public static final BigDecimal MIN_EASE = new BigDecimal("1.30");
     public static final BigDecimal MAX_EASE = new BigDecimal("3.00");
     public static final BigDecimal EASE_STEP = new BigDecimal("0.20");
-    /** 连续答对达到该阶段即视为已掌握,移出复习队列。 */
-    public static final int MASTER_STAGE = 4;
+    /** 连续答对达到该次数即视为已掌握,自动移出错题本。 */
+    public static final int MASTER_STREAK = 3;
 
     private Sm2Scheduler() {
     }
@@ -72,8 +78,10 @@ public class Sm2Scheduler {
                 item.setStatus("LEARNING");
             }
             case "UNSURE" -> {
-                // 没把握:阶段不动,明天再来一次——「蒙对的题」必须回到队列
+                // 没把握:阶段不动,明天再来一次——「蒙对的题」必须回到队列,
+                // 连对计数同时清零(没把握的答对不算「连续答对」)
                 item.setIntervalDays(1);
+                item.setCorrectStreak(0);
                 item.setStatus("LEARNING");
             }
             case "SURE" -> {
@@ -85,7 +93,8 @@ public class Sm2Scheduler {
                         : item.getEaseFactor().multiply(BigDecimal.valueOf(item.getIntervalDays()))
                             .setScale(0, RoundingMode.HALF_UP).intValue();
                 item.setIntervalDays(Math.min(interval, MAX_INTERVAL_DAYS));
-                item.setStatus(stage >= MASTER_STAGE ? "MASTERED" : "LEARNING");
+                // 连对满 MASTER_STREAK 次:标记已掌握,自动退出错题本
+                item.setStatus(item.getCorrectStreak() >= MASTER_STREAK ? "MASTERED" : "LEARNING");
             }
             default -> throw new IllegalArgumentException("未知的 confidence:" + confidence);
         }

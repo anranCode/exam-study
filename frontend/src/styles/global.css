@@ -28,6 +28,11 @@ body {
   line-height: var(--line-height-body);
   /* 移动端不出现横向滚动 */
   overflow-x: hidden;
+  /*
+   * 软键盘弹出时不要触发浏览器的「下拉刷新 / 越界回弹」,
+   * 该行为会把页面整体滚上去,固定定位的底部操作区看着就像错乱。
+   */
+  overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

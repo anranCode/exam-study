@@ -1,7 +1,12 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { ReviewItemVO, ReviewQueueStatus } from '@/api/types'
-import { getReviewItems, markReviewItemMastered, removeReviewItem } from '@/api/review'
+import type { ReviewItemVO, ReviewQueueStatus, ReviewTypeCountVO } from '@/api/types'
+import {
+  getReviewItems,
+  getReviewTypeCounts,
+  markReviewItemMastered,
+  removeReviewItem
+} from '@/api/review'
 import { useTodayStore } from './today'
 
 /**
@@ -15,6 +20,8 @@ export const WRONG_PAGE_SIZE = 200
 
 export interface WrongFilters {
   subjectId: number | null
+  /** 题型,null = 不限 */
+  type: string | null
   /** null = 不限 / LEARNING 未掌握(还在队列)/ MASTERED 已掌握 */
   status: ReviewQueueStatus | null
   /** 只看今天到期的 */
@@ -62,13 +69,20 @@ export const useWrongStore = defineStore('wrong', () => {
   const total = ref(0)
   const loading = ref(false)
   const loaded = ref(false)
+  /** 各题型的错题数,给「按题型复习」的下拉用 */
+  const typeCounts = ref<ReviewTypeCountVO[]>([])
   /**
    * 默认只看**未掌握**的。
    *
    * 错题本是「还要复习什么」的清单,已掌握的不该混在里面;要看它们切一下筛选即可。
    * 阶段 5 的验收标准也要求「标记已掌握后该题从默认列表消失,切到已掌握筛选能看到」。
    */
-  const filters = ref<WrongFilters>({ subjectId: null, status: 'LEARNING', dueOnly: false })
+  const filters = ref<WrongFilters>({
+    subjectId: null,
+    type: null,
+    status: 'LEARNING',
+    dueOnly: false
+  })
 
   const groups = computed<WrongGroup[]>(() => groupItems(items.value))
 
@@ -80,6 +94,7 @@ export const useWrongStore = defineStore('wrong', () => {
     try {
       const res = await getReviewItems({
         subjectId: filters.value.subjectId ?? undefined,
+        type: filters.value.type ?? undefined,
         status: filters.value.status ?? undefined,
         due: filters.value.dueOnly ? true : undefined,
         page: 1,
@@ -95,17 +110,37 @@ export const useWrongStore = defineStore('wrong', () => {
 
   /** 供练习结束时调用:错题本要立刻反映刚答错的题 */
   async function refresh() {
-    await fetch()
+    await Promise.all([fetch(), fetchTypeCounts()])
+  }
+
+  /**
+   * 拉题型分布。换了科目就该重新拉 —— 下拉里只该出现「这个科目下确实有错题」的题型。
+   */
+  async function fetchTypeCounts() {
+    try {
+      typeCounts.value = await getReviewTypeCounts(filters.value.subjectId ?? undefined)
+    } catch {
+      // 题型分布只是筛选辅助,失败不该阻塞错题列表
+      typeCounts.value = []
+    }
   }
 
   function setFilters(patch: Partial<WrongFilters>) {
-    filters.value = { ...filters.value, ...patch }
+    const next = { ...filters.value, ...patch }
+    // 换科目后,原来选的题型可能在新科目下根本没有错题 → 直接清掉,免得筛出空列表
+    if (patch.subjectId !== undefined && patch.subjectId !== filters.value.subjectId) {
+      next.type = null
+    }
+    filters.value = next
     void fetch()
+    if (patch.subjectId !== undefined) void fetchTypeCounts()
   }
 
-  /** 回到默认视图:全部科目、只看未掌握、不限定到期 */
+  /** 回到默认视图:全部科目 / 全部题型、只看未掌握、不限定到期 */
   function resetFilters() {
-    setFilters({ subjectId: null, status: 'LEARNING', dueOnly: false })
+    filters.value = { subjectId: null, type: null, status: 'LEARNING', dueOnly: false }
+    void fetch()
+    void fetchTypeCounts()
   }
 
   /**
@@ -148,10 +183,12 @@ export const useWrongStore = defineStore('wrong', () => {
     total,
     loading,
     loaded,
+    typeCounts,
     filters,
     groups,
     truncated,
     fetch,
+    fetchTypeCounts,
     refresh,
     setFilters,
     resetFilters,

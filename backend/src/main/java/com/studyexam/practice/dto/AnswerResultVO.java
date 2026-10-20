@@ -20,6 +20,10 @@ public record AnswerResultVO(
         @Schema(description = "本题是否来自复习队列") boolean isReview,
         @Schema(description = "主观题已自评得分(未自评时为空)") Integer selfScore,
         @Schema(description = "主观题要点总数") Integer totalPoints,
+        @Schema(description = "该题累计答错次数(错题本排序依据)", example = "3") int wrongCount,
+        @Schema(description = "该题当前连续答对次数;满 3 次自动移出错题本", example = "1") int correctStreak,
+        @Schema(description = "本次作答是否让该题移出了错题本(连对满 3 次)", example = "false")
+        boolean mastered,
         @Schema(description = "本轮进度") AnswerProgressVO progress
 ) {
 }

@@ -109,11 +109,11 @@ class ReviewServiceTest {
         LocalDateTime past = LocalDateTime.now().minusDays(1);
         ReviewItem ri = item(5L, 36L, "LEARNING", 1, past);
         stubLookups(ri, question(36L, 1L, 7L));
-        when(reviewItemRepository.countForList(any(), any(), any(), anyBoolean(), any())).thenReturn(1L);
-        when(reviewItemRepository.findIdsForList(any(), any(), any(), anyBoolean(), any(), anyInt(), anyInt()))
+        when(reviewItemRepository.countForList(any(), any(), any(), any(), anyBoolean(), any())).thenReturn(1L);
+        when(reviewItemRepository.findIdsForList(any(), any(), any(), any(), anyBoolean(), any(), anyInt(), anyInt()))
                 .thenReturn(List.of(5L));
 
-        PageResult<ReviewItemVO> page = service.listItems(null, null, null, null, null);
+        PageResult<ReviewItemVO> page = service.listItems(null, null, null, null, null, null);
 
         assertThat(page.total()).isEqualTo(1);
         ReviewItemVO vo = page.list().get(0);
@@ -122,6 +122,7 @@ class ReviewServiceTest {
         assertThat(vo.chapterName()).isEqualTo("第一章 物质世界及其发展规律");
         assertThat(vo.typeLabel()).isEqualTo("单项选择题");
         assertThat(vo.wrongCount()).isEqualTo(2);
+        assertThat(vo.correctStreak()).isEqualTo(1);
         assertThat(vo.masteryStage()).isEqualTo(ReviewItemVO.STAGE_LEARNING);
         assertThat(vo.masteryLabel()).isEqualTo("复习中");
         assertThat(vo.due()).isTrue();
@@ -134,29 +135,30 @@ class ReviewServiceTest {
     void listItems_notDueYet() {
         ReviewItem ri = item(5L, 36L, "LEARNING", 1, LocalDateTime.now().plusDays(2));
         stubLookups(ri, question(36L, 1L, null));
-        when(reviewItemRepository.countForList(any(), any(), any(), anyBoolean(), any())).thenReturn(1L);
-        when(reviewItemRepository.findIdsForList(any(), any(), any(), anyBoolean(), any(), anyInt(), anyInt()))
+        when(reviewItemRepository.countForList(any(), any(), any(), any(), anyBoolean(), any())).thenReturn(1L);
+        when(reviewItemRepository.findIdsForList(any(), any(), any(), any(), anyBoolean(), any(), anyInt(), anyInt()))
                 .thenReturn(List.of(5L));
 
-        assertThat(service.listItems(null, null, null, 1, 20).list().get(0).due()).isFalse();
+        assertThat(service.listItems(null, null, null, null, 1, 20).list().get(0).due()).isFalse();
     }
 
     @Test
     @DisplayName("列表:总数为 0 时直接返回空页,不再查 id")
     void listItems_emptyShortCircuits() {
-        when(reviewItemRepository.countForList(any(), any(), any(), anyBoolean(), any())).thenReturn(0L);
+        when(reviewItemRepository.countForList(any(), any(), any(), any(), anyBoolean(), any())).thenReturn(0L);
 
-        PageResult<ReviewItemVO> page = service.listItems(1L, null, null, 1, 20);
+        PageResult<ReviewItemVO> page = service.listItems(1L, null, null, null, 1, 20);
 
         assertThat(page.list()).isEmpty();
         assertThat(page.total()).isZero();
-        verify(reviewItemRepository, never()).findIdsForList(any(), any(), any(), anyBoolean(), any(), anyInt(), anyInt());
+        verify(reviewItemRepository, never())
+                .findIdsForList(any(), any(), any(), any(), anyBoolean(), any(), anyInt(), anyInt());
     }
 
     @Test
     @DisplayName("列表:status 只认 LEARNING / MASTERED,写错就报错而不是静默返回空")
     void listItems_badStatus() {
-        assertThatThrownBy(() -> service.listItems(null, "DONE", null, 1, 20))
+        assertThatThrownBy(() -> service.listItems(null, null, "DONE", null, 1, 20))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("status");
     }
@@ -164,12 +166,31 @@ class ReviewServiceTest {
     @Test
     @DisplayName("列表:筛选参数原样传给查询,空 status 传 null 表示不限")
     void listItems_passesFilters() {
-        when(reviewItemRepository.countForList(any(), any(), any(), anyBoolean(), any())).thenReturn(0L);
+        when(reviewItemRepository.countForList(any(), any(), any(), any(), anyBoolean(), any())).thenReturn(0L);
 
-        service.listItems(1L, "  ", true, 2, 200);
+        service.listItems(1L, null, "  ", true, 2, 200);
 
         verify(reviewItemRepository).countForList(
-                eq(1L), eq(1L), isNull(), eq(true), any(LocalDateTime.class));
+                eq(1L), eq(1L), isNull(), isNull(), eq(true), any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("列表:题型筛选会被规范化成大写并传给查询")
+    void listItems_passesTypeFilter() {
+        when(reviewItemRepository.countForList(any(), any(), any(), any(), anyBoolean(), any())).thenReturn(0L);
+
+        service.listItems(null, "single_choice", "LEARNING", false, 1, 20);
+
+        verify(reviewItemRepository).countForList(
+                eq(1L), isNull(), eq("SINGLE_CHOICE"), eq("LEARNING"), eq(false), any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("列表:未知题型报错,不静默当成「不限」")
+    void listItems_badType() {
+        assertThatThrownBy(() -> service.listItems(null, "NOT_A_TYPE", null, null, 1, 20))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("未知题型");
     }
 
     // ── 掌握阶段的三档 ──────────────────────────────────────
@@ -179,7 +200,7 @@ class ReviewServiceTest {
     void masteryStage_threeBuckets() {
         assertThat(ReviewItemVO.masteryStageOf("LEARNING", 0)).isEqualTo(ReviewItemVO.STAGE_NOT_STARTED);
         assertThat(ReviewItemVO.masteryStageOf("LEARNING", 2)).isEqualTo(ReviewItemVO.STAGE_LEARNING);
-        assertThat(ReviewItemVO.masteryStageOf("MASTERED", 4)).isEqualTo(ReviewItemVO.STAGE_MASTERED);
+        assertThat(ReviewItemVO.masteryStageOf("MASTERED", 3)).isEqualTo(ReviewItemVO.STAGE_MASTERED);
 
         assertThat(ReviewItemVO.masteryLabelOf(ReviewItemVO.STAGE_NOT_STARTED)).isEqualTo("未掌握");
         assertThat(ReviewItemVO.masteryLabelOf(ReviewItemVO.STAGE_LEARNING)).isEqualTo("复习中");
@@ -203,7 +224,7 @@ class ReviewServiceTest {
     @Test
     @DisplayName("标记已掌握:已经是 MASTERED 时幂等,不再写库")
     void markMastered_idempotent() {
-        ReviewItem ri = item(5L, 36L, "MASTERED", 4, LocalDateTime.now());
+        ReviewItem ri = item(5L, 36L, "MASTERED", 3, LocalDateTime.now());
         when(reviewItemRepository.findByUserIdAndQuestionId(1L, 36L)).thenReturn(java.util.Optional.of(ri));
 
         service.markMastered(36L);

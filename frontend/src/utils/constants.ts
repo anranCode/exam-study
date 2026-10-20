@@ -41,6 +41,24 @@ export const OPTIONLESS_TYPES = ['CLOZE_TRANSFORM'] as const
 
 export const isObjective = (t: string): boolean => OBJECTIVE_TYPES.includes(t as never)
 
+/**
+ * 「点一下就判题」的题型:只有一个答案,点选项即提交,不需要再点确认。
+ *
+ * 多选题要选完再提交、填空类要打字,都不能在第一次点击/输入时就提交,
+ * 所以它们仍保留「提交答案」按钮。
+ */
+export const AUTO_SUBMIT_TYPES = [
+  'SINGLE_CHOICE',
+  'READING_CHOICE',
+  'TRUE_FALSE',
+  'READING_JUDGE'
+] as const
+
+export const isAutoSubmit = (t: string): boolean => AUTO_SUBMIT_TYPES.includes(t as never)
+
+/** 连续答对多少次后自动移出错题本(与后端 Sm2Scheduler.MASTER_STREAK 一致) */
+export const MASTER_STREAK = 3
+
 /** 题型下拉选项 */
 export const QUESTION_TYPE_OPTIONS = Object.entries(QUESTION_TYPE_LABEL).map(([value, label]) => ({
   value,

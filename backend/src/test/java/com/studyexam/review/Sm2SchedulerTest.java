@@ -13,8 +13,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * SM-2 排期的单元测试。断言基准照 docs/study-exam/backend/04-features.md 阶段 5 的推演表写:
  * 初始 interval = 1、ease_factor = 2.5 时——
- * 第 1 次 SURE → stage 1、interval 1;第 2 次 → stage 2、interval 3;第 3 次 → stage 3、interval 8;
- * 第 4 次 → stage 4、MASTERED。
+ * 第 1 次 SURE → stage 1、interval 1;第 2 次 → stage 2、interval 3;
+ * <b>第 3 次 → 连对满 3 次,标记 MASTERED 自动移出错题本</b>(产品规则:连对三次即出队)。
  */
 class Sm2SchedulerTest {
 
@@ -60,7 +60,7 @@ class Sm2SchedulerTest {
     }
 
     @Test
-    @DisplayName("连续答对:阶段与间隔按 1 → 3 → 8 推进(第 4 次标记已掌握)")
+    @DisplayName("连续答对:阶段按 1 → 2 → 3 推进,第 3 次连对即标记已掌握并出队")
     void consecutiveSureAdvancesStages() {
         ReviewItem item = fresh();
 
@@ -69,29 +69,27 @@ class Sm2SchedulerTest {
         assertThat(item.getStage()).isEqualTo(1);
         assertThat(item.getIntervalDays()).isEqualTo(1);
         assertThat(item.getCorrectStreak()).isEqualTo(1);
+        assertThat(item.getStatus()).isEqualTo("LEARNING");
 
         // 第 2 次:stage 2,round(1 × 2.5) = 3
         Sm2Scheduler.apply(item, "SURE", NOW);
         assertThat(item.getStage()).isEqualTo(2);
         assertThat(item.getIntervalDays()).isEqualTo(3);
+        assertThat(item.getCorrectStreak()).isEqualTo(2);
+        assertThat(item.getStatus()).isEqualTo("LEARNING");
 
-        // 第 3 次:stage 3,round(3 × 2.5) = 8
+        // 第 3 次:stage 3,连对满 3 次 → MASTERED,自动移出错题本
         Sm2Scheduler.apply(item, "SURE", NOW);
         assertThat(item.getStage()).isEqualTo(3);
-        assertThat(item.getIntervalDays()).isEqualTo(8);
-
-        // 第 4 次:stage 4 → MASTERED,移出复习队列
-        Sm2Scheduler.apply(item, "SURE", NOW);
-        assertThat(item.getStage()).isEqualTo(4);
         assertThat(item.getStatus()).isEqualTo("MASTERED");
-        assertThat(item.getCorrectStreak()).isEqualTo(4);
+        assertThat(item.getCorrectStreak()).isEqualTo(3);
     }
 
     @Test
-    @DisplayName("阶段推进后再答错:回到 LEARNING,阶段归零")
+    @DisplayName("出队后再答错:回到 LEARNING,阶段归零、连对清零")
     void masteredThenWrongReturnsToQueue() {
         ReviewItem item = fresh();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 3; i++) {
             Sm2Scheduler.apply(item, "SURE", NOW);
         }
         assertThat(item.getStatus()).isEqualTo("MASTERED");
@@ -101,6 +99,37 @@ class Sm2SchedulerTest {
         assertThat(item.getStatus()).isEqualTo("LEARNING");
         assertThat(item.getStage()).isZero();
         assertThat(item.getIntervalDays()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("连对被打断:中间错一次,计数从头算,不会因为跨轮累计而出错队")
+    void streakBrokenByWrongRestarts() {
+        ReviewItem item = fresh();
+        Sm2Scheduler.apply(item, "SURE", NOW);
+        Sm2Scheduler.apply(item, "SURE", NOW);
+        assertThat(item.getCorrectStreak()).isEqualTo(2);
+
+        Sm2Scheduler.apply(item, "WRONG", NOW);
+        assertThat(item.getCorrectStreak()).isZero();
+        assertThat(item.getStatus()).isEqualTo("LEARNING");
+
+        Sm2Scheduler.apply(item, "SURE", NOW);
+        assertThat(item.getCorrectStreak()).isEqualTo(1);
+        assertThat(item.getStatus()).isEqualTo("LEARNING");
+    }
+
+    @Test
+    @DisplayName("没把握的答对不算连对:计数被清零,不能靠蒙题出队")
+    void unsureDoesNotCountAsStreak() {
+        ReviewItem item = fresh();
+        Sm2Scheduler.apply(item, "SURE", NOW);
+        Sm2Scheduler.apply(item, "SURE", NOW);
+        assertThat(item.getCorrectStreak()).isEqualTo(2);
+
+        Sm2Scheduler.apply(item, "UNSURE", NOW);
+
+        assertThat(item.getCorrectStreak()).isZero();
+        assertThat(item.getStatus()).isEqualTo("LEARNING");
     }
 
     @Test

@@ -12,7 +12,13 @@ public interface ReviewItemRepository extends JpaRepository<ReviewItem, Long> {
 
     Optional<ReviewItem> findByUserIdAndQuestionId(Long userId, Long questionId);
 
-    /** 到期复习的题目 ID(按到期望时间升序,最该复习的排前面)。 */
+    /**
+     * 到期复习的题目 ID。
+     *
+     * <p>排序先看答错次数:错得最多的排最前面(错题本复习要优先攻克反复错的题),
+     * 同错次再按到期望时间升序。题型筛选可选,传 typeFilter = true 时只取 types 里的题型
+     * —— 错题本支持「按科目 + 题型」挑着复习。
+     */
     @Query(value = """
             SELECT ri.question_id
             FROM review_item ri
@@ -21,12 +27,15 @@ public interface ReviewItemRepository extends JpaRepository<ReviewItem, Long> {
               AND ri.status = 'LEARNING'
               AND ri.next_review_at <= :now
               AND (:subjectId IS NULL OR q.subject_id = :subjectId)
+              AND (:typeFilter = FALSE OR q.type IN (:types))
               AND q.status = 'PUBLISHED'
-            ORDER BY ri.next_review_at ASC
+            ORDER BY ri.wrong_count DESC, ri.next_review_at ASC, ri.id ASC
             LIMIT :limit
             """, nativeQuery = true)
     List<Long> findDueQuestionIds(@Param("userId") Long userId,
                                   @Param("subjectId") Long subjectId,
+                                  @Param("typeFilter") boolean typeFilter,
+                                  @Param("types") List<String> types,
                                   @Param("now") LocalDateTime now,
                                   @Param("limit") int limit);
 
@@ -67,7 +76,8 @@ public interface ReviewItemRepository extends JpaRepository<ReviewItem, Long> {
      * 硬拼一条大原生投影又会让字段名和 DTO 各写一遍。先取 id 再按 id 批量装配,
      * 与 {@code PracticeService} 组装练习题的写法一致。
      *
-     * <p>排序按 {@code next_review_at} 升序 —— 最该复习的排最前面;同时间按 id 兜底,
+     * <p>排序:{@code wrong_count DESC, next_review_at ASC, id ASC} ——
+     * 错误次数多的排最前面(反复错的题才最该先练),同错次再按到期先后;最后按 id 兜底,
      * 否则分页时同一批数据的顺序可能抖动。
      */
     @Query(value = """
@@ -76,13 +86,15 @@ public interface ReviewItemRepository extends JpaRepository<ReviewItem, Long> {
             JOIN question q ON q.id = ri.question_id
             WHERE ri.user_id = :userId
               AND (:subjectId IS NULL OR q.subject_id = :subjectId)
+              AND (:type IS NULL OR q.type = :type)
               AND (:status IS NULL OR ri.status = :status)
               AND (:dueOnly = FALSE OR ri.next_review_at <= :now)
-            ORDER BY ri.next_review_at ASC, ri.id ASC
+            ORDER BY ri.wrong_count DESC, ri.next_review_at ASC, ri.id ASC
             LIMIT :limit OFFSET :offset
             """, nativeQuery = true)
     List<Long> findIdsForList(@Param("userId") Long userId,
                               @Param("subjectId") Long subjectId,
+                              @Param("type") String type,
                               @Param("status") String status,
                               @Param("dueOnly") boolean dueOnly,
                               @Param("now") LocalDateTime now,
@@ -96,11 +108,13 @@ public interface ReviewItemRepository extends JpaRepository<ReviewItem, Long> {
             JOIN question q ON q.id = ri.question_id
             WHERE ri.user_id = :userId
               AND (:subjectId IS NULL OR q.subject_id = :subjectId)
+              AND (:type IS NULL OR q.type = :type)
               AND (:status IS NULL OR ri.status = :status)
               AND (:dueOnly = FALSE OR ri.next_review_at <= :now)
             """, nativeQuery = true)
     long countForList(@Param("userId") Long userId,
                       @Param("subjectId") Long subjectId,
+                      @Param("type") String type,
                       @Param("status") String status,
                       @Param("dueOnly") boolean dueOnly,
                       @Param("now") LocalDateTime now);
@@ -118,4 +132,24 @@ public interface ReviewItemRepository extends JpaRepository<ReviewItem, Long> {
             WHERE ri.userId = :userId AND ri.lastReviewAt >= :from AND ri.createdAt < :from
             """)
     long countUpdatedSince(@Param("userId") Long userId, @Param("from") LocalDateTime from);
+
+    /**
+     * 错题本题型分布。返回行结构:[type, cnt],按题数降序。
+     *
+     * <p>只数指定队列状态的条目 —— 前端下拉要显示的是「还能练哪些题型」,
+     * 已掌握的不该占位。
+     */
+    @Query(value = """
+            SELECT q.type AS type, COUNT(*) AS cnt
+            FROM review_item ri
+            JOIN question q ON q.id = ri.question_id
+            WHERE ri.user_id = :userId
+              AND (:subjectId IS NULL OR q.subject_id = :subjectId)
+              AND (:status IS NULL OR ri.status = :status)
+            GROUP BY q.type
+            ORDER BY COUNT(*) DESC, q.type ASC
+            """, nativeQuery = true)
+    List<Object[]> countGroupedByType(@Param("userId") Long userId,
+                                      @Param("subjectId") Long subjectId,
+                                      @Param("status") String status);
 }

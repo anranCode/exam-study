@@ -139,6 +139,11 @@ export const usePracticeStore = defineStore('practice', () => {
     }
   }
 
+  /** 清空本地选中(点「不知道」时用,避免残留选择被当成有效作答) */
+  function clearSelection() {
+    selectedKeys.value = []
+  }
+
   /**
    * 提交当前题作答。成功写入 answeredMap(status → GRADED);
    * 失败恢复到 ANSWERING 并抛出,调用方必须停留在当前题让用户重试。
@@ -301,6 +306,7 @@ export const usePracticeStore = defineStore('practice', () => {
     isLastQuestion,
     startSession,
     selectOption,
+    clearSelection,
     submitAnswer,
     submitSelfScore,
     nextQuestion,
