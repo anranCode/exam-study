@@ -57,6 +57,7 @@ import java.util.stream.Collectors;
  *   <li>主观题后端不判分:作答时先占位,等自评提交时按自评比例定信心度并推进排期;
  *       若一直没自评,结束练习时按 UNSURE 兜底入队,保证错题不会漏进复习计划;</li>
  *   <li>答错一律记 {@code confidence = WRONG},即使用户点的是「确认」——排期准确性靠它。</li>
+ *   <li>错题本只收没答对的题:WRONG / UNSURE 会让新题入队,答对(SURE)只推进已在队列里的题。</li>
  * </ul>
  */
 @Service
@@ -156,7 +157,7 @@ public class PracticeService {
 
         if (existing.isPresent()) {
             // 幂等:重复提交返回已有记录,不新建、不重复推进排期
-            return toResultVO(session, question, existing.get(), isReview);
+            return toResultVO(session, question, existing.get(), isReview, false);
         }
 
         Boolean correct = gradingService.grade(question, dto.userAnswer());
@@ -166,6 +167,7 @@ public class PracticeService {
         record.setUserAnswer(trimToNull(dto.userAnswer()));
         record.setSpentSeconds(dto.spentSeconds() == null ? 0 : Math.max(0, dto.spentSeconds()));
 
+        boolean mastered = false;
         if (correct == null) {
             // 主观题:等自评时再定信心度(见类注释)
             record.setConfidence("UNSURE");
@@ -174,7 +176,7 @@ public class PracticeService {
             String confidence = correct ? declaredConfidence(dto.confidence()) : "WRONG";
             record.setConfidence(confidence);
             record.setIsCorrect(correct);
-            advanceSchedule(question.getId(), confidence, now);
+            mastered = advanceSchedule(question.getId(), confidence, now, !"SURE".equals(confidence));
         }
         AnswerRecord savedRecord = answerRepository.save(record);
 
@@ -184,7 +186,7 @@ public class PracticeService {
         }
         sessionRepository.save(session);
 
-        return toResultVO(session, question, savedRecord, isReview);
+        return toResultVO(session, question, savedRecord, isReview, mastered);
     }
 
     // ── 主观题自评 ──────────────────────────────────────────
@@ -222,11 +224,14 @@ public class PracticeService {
         answerRepository.save(record);
 
         // 主观题在作答时不推进排期,这里首次推进;重复自评只改分数,不再动排期(否则阶段会重复累加)
+        boolean mastered = false;
         if (firstScoring) {
-            advanceSchedule(question.getId(), confidence, LocalDateTime.now());
+            mastered = advanceSchedule(question.getId(), confidence, LocalDateTime.now(),
+                    !"SURE".equals(confidence));
         }
 
-        return toResultVO(session, question, record, isFromReviewQueue(question.getId(), session));
+        return toResultVO(session, question, record,
+                isFromReviewQueue(question.getId(), session), mastered);
     }
 
     // ── 结束本轮 ────────────────────────────────────────────
@@ -245,7 +250,7 @@ public class PracticeService {
         for (AnswerRecord a : answers) {
             if (a.getIsCorrect() == null && a.getSelfScore() == null
                     && !hasScheduled(a.getQuestionId(), session)) {
-                advanceSchedule(a.getQuestionId(), "UNSURE", now);
+                advanceSchedule(a.getQuestionId(), "UNSURE", now, true);
             }
         }
 
@@ -393,12 +398,30 @@ public class PracticeService {
 
     // ── 内部:排期与统计 ────────────────────────────────────
 
-    /** 按信心度推进该题的复习排期(不存在则新建条目)。 */
-    private void advanceSchedule(Long questionId, String confidence, LocalDateTime now) {
+    /**
+     * 按信心度推进该题的复习排期。
+     *
+     * <p><b>错题本只收「没答对」的题</b>:WRONG / UNSURE 会把一道新题放进队列;
+     * 答对(SURE)只推进**已经在错题本里**的题。否则所有做对的题也会进队列,
+     * 错题本里会出现一堆「错 0 次」的题,和「错题本」的语义不符。
+     *
+     * @param createIfMissing 队列里没有这道题时是否新建条目
+     * @return 本次作答是否让该题**刚刚**移出错题本(连对满 {@link Sm2Scheduler#MASTER_STREAK})
+     */
+    private boolean advanceSchedule(Long questionId, String confidence, LocalDateTime now,
+                                    boolean createIfMissing) {
         ReviewItem item = reviewItemRepository.findByUserIdAndQuestionId(USER_ID, questionId)
-                .orElseGet(() -> Sm2Scheduler.newItem(questionId, now));
+                .orElse(null);
+        if (item == null) {
+            if (!createIfMissing) {
+                return false;
+            }
+            item = Sm2Scheduler.newItem(questionId, now);
+        }
+        boolean wasMastered = "MASTERED".equals(item.getStatus());
         Sm2Scheduler.apply(item, confidence, now);
         reviewItemRepository.save(item);
+        return !wasMastered && "MASTERED".equals(item.getStatus());
     }
 
     /** 该题是否已经进入复习队列(用于主观题避免重复推进)。 */
@@ -532,7 +555,8 @@ public class PracticeService {
     }
 
     private AnswerResultVO toResultVO(PracticeSession session, Question question,
-                                      AnswerRecord record, boolean isReview) {
+                                      AnswerRecord record, boolean isReview,
+                                      boolean justMastered) {
         int answered = session.getAnsweredCount();
         int total = session.getTotalCount();
         AnswerProgressVO progress = new AnswerProgressVO(answered, session.getCorrectCount(), total);
@@ -541,9 +565,6 @@ public class PracticeService {
         LocalDateTime nextReviewAt = item == null ? null : item.getNextReviewAt();
         int wrongCount = item == null ? 0 : item.getWrongCount();
         int correctStreak = item == null ? 0 : item.getCorrectStreak();
-        // 「本次作答让这道题移出了错题本」= 答对了且当前处于已掌握状态
-        boolean mastered = item != null && "MASTERED".equals(item.getStatus())
-                && Boolean.TRUE.equals(record.getIsCorrect());
 
         return new AnswerResultVO(
                 question.getId(),
@@ -557,7 +578,7 @@ public class PracticeService {
                 record.getTotalPoints(),
                 wrongCount,
                 correctStreak,
-                mastered,
+                justMastered,
                 progress);
     }
 

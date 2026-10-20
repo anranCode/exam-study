@@ -54,11 +54,17 @@ const freeAnswer = computed({
   set: (value: string) => emit('select', value)
 })
 
-/** 后端返回连写答案(如 ABD / T / NG),这里拆成字母集合 */
+/**
+ * 后端返回连写答案(如 ABD / T / NG),这里按**选项 key 整体匹配**,不能逐字符拆 ——
+ * 阅读判断的 NG 是两字母 key,拆成 N/G 会永远匹配不上,导致正确答案不高亮、选中 NG 反被标红。
+ */
 const correctKeys = computed<string[]>(() => {
   const raw = props.record?.result.correctAnswer
   if (!raw) return []
-  return raw.toUpperCase().replace(/[^A-Z]/g, '').split('')
+  const normalized = raw.toUpperCase().replace(/[\s,，、;；]/g, '')
+  return options.value
+    .map((opt) => opt.key.toUpperCase())
+    .filter((key) => key.length > 0 && normalized.includes(key))
 })
 
 function stateFor(key: string): OptionVisualState {

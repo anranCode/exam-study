@@ -114,11 +114,15 @@ export const useWrongStore = defineStore('wrong', () => {
   }
 
   /**
-   * 拉题型分布。换了科目就该重新拉 —— 下拉里只该出现「这个科目下确实有错题」的题型。
+   * 拉题型分布。换了科目或状态就该重新拉 —— 下拉里只该出现「当前范围下确实有错题」的题型,
+   * 计数也要和列表用同一个状态口径,否则切到「已掌握」会看到一堆点了就空的题型。
    */
   async function fetchTypeCounts() {
     try {
-      typeCounts.value = await getReviewTypeCounts(filters.value.subjectId ?? undefined)
+      typeCounts.value = await getReviewTypeCounts(
+        filters.value.subjectId ?? undefined,
+        filters.value.status ?? undefined
+      )
     } catch {
       // 题型分布只是筛选辅助,失败不该阻塞错题列表
       typeCounts.value = []
@@ -133,7 +137,7 @@ export const useWrongStore = defineStore('wrong', () => {
     }
     filters.value = next
     void fetch()
-    if (patch.subjectId !== undefined) void fetchTypeCounts()
+    if (patch.subjectId !== undefined || patch.status !== undefined) void fetchTypeCounts()
   }
 
   /** 回到默认视图:全部科目 / 全部题型、只看未掌握、不限定到期 */
@@ -165,8 +169,9 @@ export const useWrongStore = defineStore('wrong', () => {
         )
       : items.value.filter((it) => it.questionId !== questionId)
     if (!stillVisible) total.value = Math.max(0, total.value - 1)
-    // 顶部到期数与底部 Tab 角标要跟着变
+    // 顶部到期数、底部 Tab 角标、题型下拉的计数都要跟着变
     void useTodayStore().refresh()
+    void fetchTypeCounts()
   }
 
   /** 移出错题本:这条从列表里彻底消失 */
@@ -176,6 +181,7 @@ export const useWrongStore = defineStore('wrong', () => {
     items.value = items.value.filter((it) => it.questionId !== questionId)
     if (items.value.length < before) total.value = Math.max(0, total.value - 1)
     void useTodayStore().refresh()
+    void fetchTypeCounts()
   }
 
   return {

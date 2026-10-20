@@ -167,4 +167,13 @@
   .el-date-editor .el-input__wrapper {
     min-height: var(--tap-target-min);
   }
+
+  /*
+   * iOS Safari 在聚焦字号小于 16px 的输入框时会自动放大整页,
+   * 看起来和软键盘引起的布局错位一样「挤乱」。移动端统一按 16px 渲染输入文字。
+   */
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: 16px;
+  }
 }

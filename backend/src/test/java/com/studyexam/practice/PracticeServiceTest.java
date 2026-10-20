@@ -11,6 +11,7 @@ import com.studyexam.question.Question;
 import com.studyexam.question.QuestionRepository;
 import com.studyexam.review.ReviewItem;
 import com.studyexam.review.ReviewItemRepository;
+import com.studyexam.review.Sm2Scheduler;
 import com.studyexam.stats.StudyLog;
 import com.studyexam.stats.StudyLogRepository;
 import com.studyexam.subject.SubjectRepository;
@@ -152,7 +153,7 @@ class PracticeServiceTest {
     }
 
     @Test
-    @DisplayName("答对但点「先看答案」:记 UNSURE,间隔回到 1 天")
+    @DisplayName("答对但没把握:记 UNSURE、连对清零,并计一次未答对")
     void correctAnswerWithUnsureConfidence() {
         service.submitAnswer(88L, new AnswerSubmitDTO(501L, "B", "UNSURE", 12));
 
@@ -166,6 +167,39 @@ class PracticeServiceTest {
         verify(reviewItemRepository).save(item.capture());
         assertThat(item.getValue().getIntervalDays()).isEqualTo(1);
         assertThat(item.getValue().getStage()).isZero();
+        assertThat(item.getValue().getWrongCount()).isEqualTo(1);
+        assertThat(item.getValue().getCorrectStreak()).isZero();
+    }
+
+    @Test
+    @DisplayName("答对一道不在错题本里的题:不新建复习条目(错题本只收错题)")
+    void correctAnswerDoesNotEnrollNewQuestion() {
+        AnswerResultVO result = service.submitAnswer(88L,
+                new AnswerSubmitDTO(501L, "B", "SURE", 6));
+
+        assertThat(result.isCorrect()).isTrue();
+        assertThat(result.mastered()).isFalse();
+        assertThat(result.wrongCount()).isZero();
+        verify(reviewItemRepository, never()).save(any(ReviewItem.class));
+    }
+
+    @Test
+    @DisplayName("错题连对第三次:推进为 MASTERED,并在结果里标记 mastered")
+    void thirdConsecutiveCorrectMarksMastered() {
+        ReviewItem item = Sm2Scheduler.newItem(501L, LocalDateTime.now());
+        item.setStage(2);
+        item.setIntervalDays(3);
+        item.setCorrectStreak(2);
+        when(reviewItemRepository.findByUserIdAndQuestionId(1L, 501L))
+                .thenReturn(Optional.of(item));
+
+        AnswerResultVO result = service.submitAnswer(88L,
+                new AnswerSubmitDTO(501L, "B", "SURE", 4));
+
+        assertThat(result.isCorrect()).isTrue();
+        assertThat(result.correctStreak()).isEqualTo(3);
+        assertThat(result.mastered()).isTrue();
+        assertThat(item.getStatus()).isEqualTo("MASTERED");
     }
 
     @Test
@@ -215,16 +249,29 @@ class PracticeServiceTest {
     }
 
     @Test
-    @DisplayName("主观题全部答到:记 SURE,阶段推进到 1")
+    @DisplayName("主观题全部答到:已在错题本里的题记 SURE,阶段推进到 1")
     void selfScoreFullMarksAdvancesStage() {
+        ReviewItem item = Sm2Scheduler.newItem(502L, LocalDateTime.now());
+        when(reviewItemRepository.findByUserIdAndQuestionId(1L, 502L))
+                .thenReturn(Optional.of(item));
         existing(subjective, null);
 
         service.submitSelfScore(88L, 502L, new SelfScoreDTO(3, 3));
 
-        ArgumentCaptor<ReviewItem> item = ArgumentCaptor.forClass(ReviewItem.class);
-        verify(reviewItemRepository).save(item.capture());
-        assertThat(item.getValue().getStage()).isEqualTo(1);
-        assertThat(item.getValue().getIntervalDays()).isEqualTo(1);
+        ArgumentCaptor<ReviewItem> saved = ArgumentCaptor.forClass(ReviewItem.class);
+        verify(reviewItemRepository).save(saved.capture());
+        assertThat(saved.getValue().getStage()).isEqualTo(1);
+        assertThat(saved.getValue().getIntervalDays()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("主观题全部答到但不在错题本里:不新建条目")
+    void fullSelfScoreDoesNotEnrollNewQuestion() {
+        existing(subjective, null);
+
+        service.submitSelfScore(88L, 502L, new SelfScoreDTO(3, 3));
+
+        verify(reviewItemRepository, never()).save(any(ReviewItem.class));
     }
 
     @Test

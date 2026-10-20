@@ -58,12 +58,14 @@ public class ReviewController {
 
     @GetMapping("/type-counts")
     @Operation(summary = "错题本题型分布",
-            description = "按题型统计还在队列里的错题数,给「按题型复习」的下拉用。"
-                    + "只数 LEARNING 状态,已掌握的不出现。")
+            description = "按题型统计错题数,给「按题型复习」的下拉用。"
+                    + "status 跟随列表筛选:传 LEARNING 只数未掌握,传 MASTERED 只数已掌握,不传表示不限。")
     @ApiResultResponses
     public Result<List<ReviewTypeCountVO>> typeCounts(
-            @Parameter(description = "科目 ID,不传表示全部") @RequestParam(required = false) Long subjectId) {
-        return Result.ok(reviewService.typeCounts(subjectId));
+            @Parameter(description = "科目 ID,不传表示全部") @RequestParam(required = false) Long subjectId,
+            @Parameter(description = "队列状态:LEARNING / MASTERED,不传表示不限")
+            @RequestParam(required = false) String status) {
+        return Result.ok(reviewService.typeCounts(subjectId, status));
     }
 
     @GetMapping("/wrong-pool/type-counts")

@@ -81,10 +81,12 @@ class GradingServiceTest {
     }
 
     @Test
-    @DisplayName("缺少标准答案的客观题不判分,避免把对的判成错的")
+    @DisplayName("缺少标准答案的客观题:有作答时不判分,空作答仍按错处理(保证「不知道」能进错题本)")
     void missingStandardAnswerDoesNotGrade() {
         Question q = question("SINGLE_CHOICE", null);
         assertThat(grading.grade(q, "A")).isNull();
+        assertThat(grading.grade(q, null)).isFalse();
+        assertThat(grading.grade(q, "  ")).isFalse();
     }
 
     @Test

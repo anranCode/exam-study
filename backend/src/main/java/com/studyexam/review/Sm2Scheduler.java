@@ -15,7 +15,7 @@ import java.time.LocalTime;
  *   <tr><td>WRONG</td><td>stage = 0,interval = 1,wrong_count++,
  *       correct_streak = 0,ease_factor -= 0.2(下限 1.30)</td></tr>
  *   <tr><td>UNSURE</td><td>stage 不变,interval = 1,next_review_at = 今天 + 1 天,
- *       correct_streak = 0(没把握不算「连对」)</td></tr>
+ *       wrong_count++,correct_streak = 0(没把握不算「连对」,也计一次未答对)</td></tr>
  *   <tr><td>SURE</td><td>correct_streak++,stage++,
  *       interval = (stage == 1 ? 1 : round(interval × ease_factor));
  *       correct_streak ≥ 3 时 status = MASTERED,自动移出错题本</td></tr>
@@ -78,9 +78,11 @@ public class Sm2Scheduler {
                 item.setStatus("LEARNING");
             }
             case "UNSURE" -> {
-                // 没把握:阶段不动,明天再来一次——「蒙对的题」必须回到队列,
-                // 连对计数同时清零(没把握的答对不算「连续答对」)
+                // 没把握(或主观题只答到部分要点):阶段不动,明天再来一次。
+                // 连对计数清零(没把握的答对不算「连续答对」);同时计一次「未答对」,
+                // 否则错题本里会出现「错 0 次」的条目,和「错题本」的语义不符。
                 item.setIntervalDays(1);
+                item.setWrongCount(item.getWrongCount() + 1);
                 item.setCorrectStreak(0);
                 item.setStatus("LEARNING");
             }

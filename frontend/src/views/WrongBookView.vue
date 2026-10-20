@@ -97,27 +97,59 @@ function nextReviewText(item: ReviewItemVO): string {
 }
 
 /**
- * 「开始复习」:带上当前的科目 / 题型筛选。
+ * 本次会练多少道:按当前筛选的错题数,后端单场上限 100。
  *
- * 错题本按科目、题型挑着练是这个页面的核心用法 —— 只练某一科的单选题,
- * 比把所有错题混在一起做有效得多。没选筛选就是全部到期错题。
+ * <p>`store.total` 是筛选后的总条数(不是当前页),所以按科目/题型筛完就是这一批的题量。
+ */
+const practiceCount = computed(() => Math.min(Math.max(store.total, 0), 100))
+
+/** 已掌握筛选下没有可刷的题(PRACTICE 只从 LEARNING 里抽) */
+const canStartReview = computed(
+  () => store.filters.status !== 'MASTERED' && practiceCount.value > 0
+)
+
+const startReviewLabel = computed(() => {
+  if (store.filters.status === 'MASTERED') return '已掌握无需刷题'
+  if (practiceCount.value === 0) return '暂无可刷错题'
+  return store.filters.dueOnly
+    ? `复习到期错题(${practiceCount.value})`
+    : `开始刷错题(${practiceCount.value})`
+})
+
+/**
+ * 「开始刷题」:按当前筛选直接练错题。
+ *
+ * <p>勾了「只看已到期」→ REVIEW(只抽排期到期的题);
+ * 否则 → WRONG(该科目 / 题型下还没掌握的错题随机抽一批,不看到期)。
+ * 这是错题本的核心用法:挑一科、一类题集中刷,连对 3 次自动移出。
  */
 function startReview() {
   const query: Record<string, string> = {}
   if (store.filters.subjectId != null) query.subjectId = String(store.filters.subjectId)
   if (store.filters.type) query.types = store.filters.type
-  router.push({ path: '/practice/review', query })
+  query.count = String(Math.max(practiceCount.value, 1))
+  if (store.filters.dueOnly) {
+    router.push({ path: '/practice/review', query })
+    return
+  }
+  router.push({ path: '/practice/wrong', query })
 }
 
-/** 当前筛选下还能复习几道(用于按钮文案;不限到期时按筛选结果计) */
+/** 当前筛选范围的一句话说明(供顶部按钮下方展示) */
 const reviewScopeText = computed(() => {
   const parts: string[] = []
   const subject = subjectStore.subjects.find((s) => s.id === store.filters.subjectId)
   if (subject) parts.push(subject.shortName || subject.name)
   const type = store.typeCounts.find((t) => t.type === store.filters.type)
   if (type) parts.push(type.typeLabel)
-  if (parts.length === 0) return '全部到期错题'
-  return `${parts.join(' · ')} 到期错题`
+  const scope = parts.length > 0 ? parts.join(' · ') : '全部科目'
+  if (store.filters.status === 'MASTERED') {
+    return `${scope} · 已掌握 ${store.total} 题`
+  }
+  if (store.filters.dueOnly) {
+    return `${scope} · 今日到期 ${store.total} 题,按遗忘曲线复习`
+  }
+  return `${scope} · 未掌握 ${store.total} 题,连对 ${MASTER_STREAK} 次自动移出`
 })
 
 /** 单条「立即复习」:只做这一道(后端按 questionIds 照单出题) */
@@ -183,20 +215,20 @@ onMounted(init)
   <section class="wrong">
     <header class="wrong__head">
       <h1 class="wrong__title">错题本</h1>
-      <p class="wrong__hint">做错的题会自动进来,按遗忘曲线安排复习。</p>
+      <p class="wrong__hint">做错的题会自动进来;按科目 / 题型刷题,连对 3 次自动移出。</p>
     </header>
 
-    <!-- 顶部:今日到期 + 开始复习 -->
+    <!-- 顶部:今日到期 + 开始刷题 -->
     <div class="card wrong__top">
       <StatNumber :value="todayStore.dueTotal" label="今日到期" unit="题" />
       <button
         type="button"
         class="wrong__start"
-        :disabled="todayStore.dueTotal === 0"
+        :disabled="!canStartReview"
         @click="startReview"
       >
         <AppIcon name="target" :size="18" />
-        <span>开始复习</span>
+        <span>{{ startReviewLabel }}</span>
       </button>
     </div>
     <p class="wrong__scope">{{ reviewScopeText }}</p>

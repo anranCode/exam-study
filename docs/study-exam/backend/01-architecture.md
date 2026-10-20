@@ -132,18 +132,25 @@ SM-2 算法的简化实现。每题维护 `stage`(复习阶段)、`interval_days
 
 ```
 用户作答:
-  答错        → stage = 0, interval = 1, next_review_at = 今天 + 1 天
-  答对且没把握 → stage 不变, interval = 1, next_review_at = 今天 + 1 天
-  答对且确定   → stage += 1
-                interval = (stage == 1) ? 1 : round(interval * easeFactor)
-                若 continuous_streak >= 3 → 标记 MASTERED,移出复习队列
+  答错(WRONG)         → stage = 0, interval = 1, next_review_at = 今天 + 1 天,
+                        wrong_count++, correct_streak = 0, ease_factor -= 0.2
+  没把握(UNSURE)      → stage 不变, interval = 1, next_review_at = 今天 + 1 天,
+                        wrong_count++, correct_streak = 0
+  答对且确定(SURE)    → correct_streak++, stage += 1
+                        interval = (stage == 1) ? 1 : round(interval * easeFactor)
+                        若 correct_streak >= 3 → 标记 MASTERED,移出复习队列
 ```
+
+**错题本只收「没答对」的题**:`WRONG` / `UNSURE` 才会把一道新题放进 `review_item`;
+`SURE` 只推进**已经在队列里**的题。否则做对过的新题也会进错题本,列表里出现「错 0 次」的条目,
+和「错题本」的语义不符。
 
 「连续答对三次即出队」是产品规则(`Sm2Scheduler.MASTER_STREAK = 3`),不看 `stage`。
 出队只是把 `status` 置为 `MASTERED`、留在「已掌握」筛选里,不是删行——之后再答错会回到 `LEARNING`。
-`confidence = UNSURE` 的答对(蒙对)不计入连对,`correct_streak` 直接清零。
+`UNSURE`(主观题只答到部分要点、或未自评的兜底)同样计一次未答对,并清零 `correct_streak`。
 
-提交答案时前端传 `confidence`(`SURE` / `UNSURE` / `WRONG`)三态,而不是只有对错。这是让排期准确的关键——「蒙对的题」必须回到队列。
+提交答案时前端传 `confidence`(`SURE` / `UNSURE` / `WRONG`)三态,而不是只有对错。
+当前交互下 `UNSURE` 只来自「不知道」之外的没把握场景(主观题部分得分),答错一律由后端改写成 `WRONG`。
 
 间隔天数上限 60 天,避免长间隔后再也见不到。
 

@@ -25,18 +25,28 @@ public class GradingService {
     }
 
     /**
-     * 客观题判分。主观题或缺少标准答案时返回 null(表示「不判分」)。
+     * 客观题判分。
+     *
+     * <p>返回值:
+     * <ul>
+     *   <li><b>true / false</b> —— 客观题判定结果;</li>
+     *   <li><b>null</b> —— 不判分:主观题,或者题目缺少标准答案且用户确实作答了
+     *       (此时把对的判成错的更糟,交给人工处理)。</li>
+     * </ul>
+     *
+     * <p>空作答对客观题一定是错的,即使这道题缺标准答案也一样 ——
+     * 「不知道」正是靠这条把题记进错题本,否则一道脏数据题会永远进不了错题本。
      */
     public Boolean grade(Question question, String userAnswer) {
         if (!isAutoGraded(question)) {
             return null;
         }
+        if (userAnswer == null || userAnswer.isBlank()) {
+            return false;
+        }
         String standard = question.getAnswer();
         if (standard == null || standard.isBlank()) {
             return null;
-        }
-        if (userAnswer == null || userAnswer.isBlank()) {
-            return false;
         }
 
         QuestionType type = QuestionType.find(question.getType()).orElse(null);

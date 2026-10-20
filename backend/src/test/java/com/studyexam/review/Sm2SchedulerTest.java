@@ -56,6 +56,9 @@ class Sm2SchedulerTest {
         assertThat(item.getStage()).isEqualTo(2);
         assertThat(item.getIntervalDays()).isEqualTo(1);
         assertThat(item.getEaseFactor()).isEqualByComparingTo("2.50");
+        assertThat(item.getCorrectStreak()).isZero();
+        // 没答对也算一次「错」,否则错题本里会出现「错 0 次」的条目
+        assertThat(item.getWrongCount()).isEqualTo(1);
         assertThat(item.getNextReviewAt()).isEqualTo(LocalDate.of(2026, 10, 16).atTime(7, 0));
     }
 

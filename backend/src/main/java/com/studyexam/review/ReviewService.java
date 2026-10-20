@@ -204,12 +204,13 @@ public class ReviewService {
      * 错题本可选的题型清单(只列当前筛选范围内真有错题的题型)。
      *
      * <p>给前端「按题型复习」的下拉用:不传科目时是全部错题的题型,
-     * 传了科目就是该科目下的题型。
+     * 传了科目就是该科目下的题型。{@code status} 跟随列表的状态筛选:
+     * 看「已掌握」时就该数已掌握的题,否则下拉里会出现一堆切过去就空的题型。
      */
     @Transactional(readOnly = true)
-    public List<ReviewTypeCountVO> typeCounts(Long subjectId) {
-        String status = STATUS_LEARNING;
-        return reviewItemRepository.countGroupedByType(USER_ID, subjectId, status).stream()
+    public List<ReviewTypeCountVO> typeCounts(Long subjectId, String status) {
+        String queueStatus = status == null || status.isBlank() ? null : normalizeStatus(status);
+        return reviewItemRepository.countGroupedByType(USER_ID, subjectId, queueStatus).stream()
                 .map(row -> {
                     String type = String.valueOf(row[0]);
                     long count = ((Number) row[1]).longValue();

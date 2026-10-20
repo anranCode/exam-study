@@ -115,12 +115,16 @@
 | 作答情况 (`confidence`) | 处理 |
 |---|---|
 | `WRONG` | `stage = 0`,`interval = 1`,`wrong_count++`,`correct_streak = 0`,`ease_factor -= 0.2`(下限 1.30) |
-| `UNSURE` | `stage` 不变,`interval = 1`,`next_review_at = 今天 + 1 天` |
+| `UNSURE` | `stage` 不变,`interval = 1`,`next_review_at = 今天 + 1 天`,`wrong_count++`,`correct_streak = 0` |
 | `SURE` | `correct_streak++`,`stage++`,`interval = (stage == 1 ? 1 : round(interval * easeFactor))`;`correct_streak >= 3` 时 `status = MASTERED`(连续答对三次即移出错题本) |
 
+> **入队规则**:只有 `WRONG` / `UNSURE` 会把一道新题写进 `review_item`;`SURE` 只推进已经在队列里的题。
+> 错题本只收没答对的题,不会出现「错 0 次」的条目(旧数据由 V9 迁移清理)。
+
 3. **间隔上限 60 天**,`ease_factor` 上下限 `1.30—3.00`。
-4. `GET /review/due-summary` 与 `GET /review/items`。
+4. `GET /review/due-summary` 与 `GET /review/items`(支持 `subjectId` + `type` 筛选)。
 5. 手动标记已掌握、移出错题本两个接口。
+6. `GET /review/type-counts?subjectId=&status=` 给「按科目 / 题型刷题」的下拉用。
 
 **验收标准**
 
@@ -136,9 +140,11 @@
 | 2 | `SURE` | 2 | `round(1 × 2.5) = 3` | 3 天后 |
 | 3 | `SURE` | 3 | `round(3 × 2.5) = 8` | 连对满 3 次 → 标记 `MASTERED`,移出队列 |
 
-「连对三次出队」看的是 `correct_streak`,不是 `stage`。`UNSURE` 的答对(蒙对)会让 `correct_streak` 清零,
-所以靠蒙题出不掉;出队只把 `status` 改成 `MASTERED`,该题仍能在错题本「已掌握」里看到,之后再答错会回到 `LEARNING`。
+「连对三次出队」看的是 `correct_streak`,不是 `stage`。`UNSURE`(主观题只答到部分要点、或未自评兜底)
+会让 `correct_streak` 清零并计一次未答对,所以「没把握」的作答不会把题推进出队;
+出队只把 `status` 改成 `MASTERED`,该题仍能在错题本「已掌握」里看到,之后再答错会回到 `LEARNING`。
 错题本列表按 `wrong_count DESC` 排序,错得最多的排最前面;题型筛选用 `?type=`,非法值直接报错而不是静默返回全部。
+只有 `WRONG` / `UNSURE` 会把新题写进 `review_item`,答对(`SURE`)只推进已在队列里的题。
 
 - `GET /review/due-summary` 返回的数字与 `review_item` 表里 `next_review_at <= now()` 的行数一致。
 

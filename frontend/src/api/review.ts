@@ -4,6 +4,7 @@ import type {
   PageResult,
   ReviewItemQuery,
   ReviewItemVO,
+  ReviewQueueStatus,
   ReviewTypeCountVO
 } from './types'
 
@@ -24,10 +25,19 @@ export function getReviewItems(query: ReviewItemQuery = {}): Promise<PageResult<
   return http.get<PageResult<ReviewItemVO>>(`${BASE}/review/items`, { params })
 }
 
-/** GET /review/type-counts —— 错题本题型分布(只数未掌握的),给「按题型复习」的下拉用 */
-export function getReviewTypeCounts(subjectId?: number): Promise<ReviewTypeCountVO[]> {
+/**
+ * GET /review/type-counts —— 错题本题型分布(给「按题型刷题」的下拉用)。
+ *
+ * <p>status 跟随列表的状态筛选:LEARNING 只数未掌握,MASTERED 只数已掌握,
+ * 不传表示不限。不跟随的话,切到「已掌握」后下拉里会出现切过去就空的题型。
+ */
+export function getReviewTypeCounts(
+  subjectId?: number,
+  status?: ReviewQueueStatus
+): Promise<ReviewTypeCountVO[]> {
   const params: Record<string, unknown> = {}
   if (subjectId != null) params.subjectId = subjectId
+  if (status) params.status = status
   return http.get<ReviewTypeCountVO[]>(`${BASE}/review/type-counts`, { params })
 }
 

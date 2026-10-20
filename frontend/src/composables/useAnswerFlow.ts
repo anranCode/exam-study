@@ -1,7 +1,14 @@
 import { computed, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import { usePracticeStore } from '@/stores/practice'
-import { isObjective, isAutoSubmit } from '@/utils/constants'
-import type { AnswerRecord, Confidence, PracticeQuestionVO, SessionSummaryVO } from '@/api/types'
+import { MASTER_STREAK, isObjective, isAutoSubmit } from '@/utils/constants'
+import type {
+  AnswerRecord,
+  AnswerResultVO,
+  Confidence,
+  PracticeQuestionVO,
+  SessionSummaryVO
+} from '@/api/types'
 
 /**
  * 答题流程:点选项 → 立即判定 → 答对自动下一题 / 答错停在原地。
@@ -38,6 +45,17 @@ export function useAnswerFlow() {
   const questionShownAt = ref(Date.now())
   /** 记录最近一次提交用的信心度,重试时保持一致(影响复习排期) */
   let lastConfidence: Confidence = 'SURE'
+  /** 最近一次操作:提交失败后「重试」要照着原路径再来一遍 */
+  let lastAction: 'answer' | 'giveUp' | 'reveal' = 'answer'
+  /**
+   * 连续答对满 MASTER_STREAK 次时后端会把题置为已掌握(移出错题本),
+   * 这里给一次明确提示 —— 否则题目会从列表里「悄悄消失」。
+   */
+  function notifyMastered(result: AnswerResultVO) {
+    if (result?.mastered) {
+      ElMessage.success(`连续答对 ${MASTER_STREAK} 次,已移出错题本`)
+    }
+  }
   /**
    * 本次提交是否该自动进入下一题。
    *
@@ -77,14 +95,16 @@ export function useAnswerFlow() {
     }
   }
 
-  /** 客观题提交:confidence = 'SURE'(正常作答)/ 'UNSURE'(在旧流程里表示没把握) */
+  /** 客观题提交:confidence = 'SURE'(正常作答)/ 'UNSURE'(没把握) */
   async function submit(confidence: Confidence = 'SURE') {
     if (graded.value || submitting.value) return
     lastConfidence = confidence
+    lastAction = 'answer'
     submitError.value = null
     autoNextPending.value = false
     try {
       const result = await store.submitAnswer(confidence, undefined, spentSeconds())
+      notifyMastered(result)
       // 答对 → 自动下一题;答错 → 停在本页等用户自己点下一题
       autoNextPending.value = result.isCorrect === true
     } catch (e) {
@@ -102,13 +122,18 @@ export function useAnswerFlow() {
   async function giveUp() {
     if (graded.value || submitting.value) return
     lastConfidence = 'UNSURE'
+    lastAction = 'giveUp'
     submitError.value = null
     autoNextPending.value = false
     store.clearSelection()
+    // 主观题已经写下的文本也不该被当成有效作答,统一清空,避免「我写了字却 0 分」的误解
+    selfAnswer.value = ''
     try {
-      await store.submitAnswer('UNSURE', null, spentSeconds())
+      const result = await store.submitAnswer('UNSURE', null, spentSeconds())
+      notifyMastered(result)
       if (isSubjective.value) {
-        await store.submitSelfScore(0, answerPoints.value.length)
+        const scored = await store.submitSelfScore(0, answerPoints.value.length)
+        notifyMastered(scored)
       }
     } catch (e) {
       submitError.value = e instanceof Error ? e.message : '提交失败'
@@ -119,9 +144,11 @@ export function useAnswerFlow() {
   async function revealPoints() {
     if (graded.value || submitting.value) return
     lastConfidence = 'SURE'
+    lastAction = 'reveal'
     submitError.value = null
     try {
-      await store.submitAnswer('SURE', selfAnswer.value.trim(), spentSeconds())
+      const result = await store.submitAnswer('SURE', selfAnswer.value.trim(), spentSeconds())
+      notifyMastered(result)
     } catch (e) {
       submitError.value = e instanceof Error ? e.message : '提交失败'
     }
@@ -140,7 +167,11 @@ export function useAnswerFlow() {
     if (submitting.value) return
     submitError.value = null
     try {
-      await store.submitSelfScore(checkedPoints.value.length, answerPoints.value.length)
+      const result = await store.submitSelfScore(
+        checkedPoints.value.length,
+        answerPoints.value.length
+      )
+      notifyMastered(result)
     } catch (e) {
       submitError.value = e instanceof Error ? e.message : '提交失败'
     }
@@ -152,9 +183,15 @@ export function useAnswerFlow() {
     return store.nextQuestion()
   }
 
-  /** 提交失败后重试当前题(客观题沿用上次信心度,主观题重发文本) */
+  /** 提交失败后重试当前题:照着上一次操作重来(答过 / 不知道 / 对照要点 / 补自评) */
   function retry() {
-    if (isSubjective.value) void revealPoints()
+    // 主观题的「不知道」分两步(提交空答案 → 0 分自评);若第二步失败,直接补自评
+    if (isSubjective.value && graded.value && !selfScored.value) {
+      void submitSelf()
+      return
+    }
+    if (lastAction === 'giveUp') void giveUp()
+    else if (isSubjective.value) void revealPoints()
     else void submit(lastConfidence)
   }
 

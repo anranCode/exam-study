@@ -245,11 +245,19 @@ POST /practice/sessions/{sessionId}/answers
   "correctAnswer": "B",
   "analysis": "……",
   "nextReviewAt": "2026-10-18 07:00:00",
+  "wrongCount": 2,
+  "correctStreak": 1,
+  "mastered": false,
   "progress": { "answered": 4, "correct": 3, "total": 10 }
 }
 ```
 
-响应(主观题):`isCorrect` 为空,改返回 `answerPoints` 供前端展示勾选。
+`wrongCount` 是该题累计未答对次数,`correctStreak` 是当前连对次数,`mastered` 表示**本次作答**
+是否让这道题连对满 3 次、刚刚被移出错题本(前端据此弹提示)。
+
+`userAnswer` 为空/null 时客观题一律判错(「不知道」走这条路,题目会立刻进错题本并返回正确答案)。
+主观题没有 `isCorrect`,改返回 `answerPoints` 供前端展示勾选;主观题自评后按分数映射信心度,
+0 分或部分得分都会进入错题本。**答对的新题不会进错题本**,只有已在错题本里的题才会被推进排期。
 
 ### 主观题自评提交
 
@@ -338,7 +346,8 @@ POST /practice/sessions/{sessionId}/finish
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/review/items?status=LEARNING&subjectId=&page=` | 复习队列(错题本) |
+| GET | `/review/items?status=LEARNING&subjectId=&type=&due=&page=&size=` | 错题本列表,**按错误次数倒序**,可按科目 / 题型 / 状态 / 是否到期筛选 |
+| GET | `/review/type-counts?subjectId=&status=` | 错题本题型分布(给「按科目 / 题型刷题」的下拉用) |
 | GET | `/review/due-summary` | 各科目到期数量汇总(今日页用) |
 | PUT | `/review/items/{questionId}/mastered` | 手动标记已掌握 |
 | DELETE | `/review/items/{questionId}` | 移出错题本 |

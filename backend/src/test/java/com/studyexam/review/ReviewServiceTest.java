@@ -7,6 +7,7 @@ import com.studyexam.common.PageResult;
 import com.studyexam.question.Question;
 import com.studyexam.question.QuestionRepository;
 import com.studyexam.review.dto.ReviewItemVO;
+import com.studyexam.review.dto.ReviewTypeCountVO;
 import com.studyexam.setting.TableAvailability;
 import com.studyexam.subject.Subject;
 import com.studyexam.subject.SubjectRepository;
@@ -191,6 +192,35 @@ class ReviewServiceTest {
         assertThatThrownBy(() -> service.listItems(null, "NOT_A_TYPE", null, null, 1, 20))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("未知题型");
+    }
+
+    // ── 题型分布(按科目 / 题型刷题的下拉)──────────────────
+
+    @Test
+    @DisplayName("题型分布:status 跟随列表筛选并规范化,计数取查询结果")
+    void typeCounts_followsStatus() {
+        when(reviewItemRepository.countGroupedByType(1L, 2L, "MASTERED"))
+                .thenReturn(List.<Object[]>of(new Object[]{"SINGLE_CHOICE", 3L}));
+
+        List<ReviewTypeCountVO> counts = service.typeCounts(2L, "mastered");
+
+        assertThat(counts).hasSize(1);
+        assertThat(counts.get(0).type()).isEqualTo("SINGLE_CHOICE");
+        assertThat(counts.get(0).count()).isEqualTo(3);
+        verify(reviewItemRepository).countGroupedByType(1L, 2L, "MASTERED");
+    }
+
+    @Test
+    @DisplayName("题型分布:不传 status 表示不限;非法状态报错")
+    void typeCounts_statusOptionalAndValidated() {
+        when(reviewItemRepository.countGroupedByType(1L, null, null)).thenReturn(List.of());
+
+        assertThat(service.typeCounts(null, null)).isEmpty();
+        verify(reviewItemRepository).countGroupedByType(1L, null, null);
+
+        assertThatThrownBy(() -> service.typeCounts(null, "DONE"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("status");
     }
 
     // ── 掌握阶段的三档 ──────────────────────────────────────

@@ -159,9 +159,10 @@ async function boot() {
   const customRandom =
     modeLower === 'random' &&
     (route.query.types != null || route.query.subjectId != null || route.query.count != null)
-  // 错题复习同理:按科目 / 题型挑着练时,必须按新筛选重新组题
+  // 错题复习同理:按科目 / 题型 / 题量挑着练时,必须按新筛选重新组题
   const customReview =
-    modeLower === 'review' && (route.query.types != null || route.query.subjectId != null)
+    modeLower === 'review' &&
+    (route.query.types != null || route.query.subjectId != null || route.query.count != null)
   // 错题练习(wrong)每次都是「按当前筛选抽一批新题」,一律重新组题
   const customWrong =
     modeLower === 'wrong' &&
@@ -209,12 +210,17 @@ async function boot() {
 
 async function onNext() {
   clearAutoNext()
-  const summary = await next()
-  if (summary) {
-    await router.push({
-      name: 'practice-result',
-      params: { mode: modeParam.value, sessionId: String(summary.sessionId) }
-    })
+  try {
+    const summary = await next()
+    if (summary) {
+      await router.push({
+        name: 'practice-result',
+        params: { mode: modeParam.value, sessionId: String(summary.sessionId) }
+      })
+    }
+  } catch {
+    // 请求层已经统一弹过错误提示;这里只兜住异常,别再弹一条重复的。
+    // 用户仍停在当前题,可以再点「下一题」重试结束本轮。
   }
 }
 
@@ -351,7 +357,7 @@ onUnmounted(() => {
           />
 
           <template v-if="graded">
-            <div class="points">
+            <div v-if="answerPoints.length" class="points">
               <p class="points__hint">对照要点,勾选你确实答到的(勾选数即得分):</p>
               <ul class="points__list">
                 <li v-for="(point, i) in answerPoints" :key="i" class="point">
@@ -369,6 +375,12 @@ onUnmounted(() => {
                 {{ record?.result.totalPoints ?? answerPoints.length }} 分
               </p>
             </div>
+
+            <!-- 有的主观题只给了参考答案文本、没有要点列表,「不知道」后也得能看到答案 -->
+            <section v-if="record?.result.correctAnswer" class="analysis">
+              <p class="analysis__hint">参考答案</p>
+              <p class="analysis__text wrap-anywhere">{{ record.result.correctAnswer }}</p>
+            </section>
 
             <section v-if="record?.result.analysis" class="analysis">
               <p class="analysis__text wrap-anywhere">{{ record.result.analysis }}</p>
@@ -604,6 +616,13 @@ onUnmounted(() => {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background-color: var(--bg-page);
+}
+
+.analysis__hint {
+  margin-bottom: var(--space-xs);
+  font-size: var(--font-size-aux);
+  line-height: var(--line-height-aux);
+  color: var(--text-secondary);
 }
 
 .analysis__text {
