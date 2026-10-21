@@ -70,6 +70,13 @@ public class Subject {
     @Column(length = 255)
     private String remark;
 
+    /**
+     * 科目专属 AI 提示词:生成答案/解析时追加到系统提示词,标记为优先遵守。
+     * 例:「答案一律用英文,词汇不超过四级;写作题 120—150 词」。
+     */
+    @Column(columnDefinition = "TEXT")
+    private String aiPrompt;
+
     /** 由 Hibernate 在插入/更新时写入,不依赖数据库默认值——否则 insert 后实体里读不到时间。 */
     @CreationTimestamp
     @Column(updatable = false)

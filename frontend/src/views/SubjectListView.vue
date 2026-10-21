@@ -43,7 +43,8 @@ const subjectForm = reactive({
   examDate: null as string | null,
   examSlot: null as string | null,
   sortOrder: 0,
-  enabled: true
+  enabled: true,
+  aiPrompt: ''
 })
 
 const subjectRules: FormRules = {
@@ -72,7 +73,8 @@ function openCreateSubject() {
     examDate: null,
     examSlot: null,
     sortOrder: nextSubjectSortOrder(),
-    enabled: true
+    enabled: true,
+    aiPrompt: ''
   })
   subjectDialogVisible.value = true
   subjectFormRef.value?.clearValidate()
@@ -89,7 +91,8 @@ function openEditSubject(subject: SubjectVO) {
     examDate: subject.examDate,
     examSlot: subject.examSlot,
     sortOrder: subject.sortOrder,
-    enabled: subject.enabled
+    enabled: subject.enabled,
+    aiPrompt: subject.aiPrompt ?? ''
   })
   subjectDialogVisible.value = true
   subjectFormRef.value?.clearValidate()
@@ -111,7 +114,8 @@ async function submitSubject() {
       examDate: subjectForm.examDate || null,
       examSlot: subjectForm.examSlot || null,
       sortOrder: subjectForm.sortOrder ?? 0,
-      enabled: subjectForm.enabled
+      enabled: subjectForm.enabled,
+      aiPrompt: subjectForm.aiPrompt.trim() || null
     }
     if (subjectDialogMode.value === 'create') {
       const created = await subjectStore.createSubject(payload)
@@ -493,6 +497,19 @@ async function confirmDeleteChapter(chapter: ChapterVO) {
         <el-form-item label="是否启用" prop="enabled">
           <el-switch v-model="subjectForm.enabled" />
         </el-form-item>
+        <el-form-item label="AI 提示词(可选)" prop="aiPrompt">
+          <el-input
+            v-model="subjectForm.aiPrompt"
+            type="textarea"
+            :rows="4"
+            maxlength="2000"
+            show-word-limit
+            placeholder="例:本学科答案一律用英文,词汇不超过四级;写作题按 120—150 词;解析要短。"
+          />
+          <p class="subject-ai-hint">
+            生成答案/解析时追加到 AI 系统提示词,并优先于通用规则;不同科目可以写不同要求。
+          </p>
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -761,5 +778,12 @@ async function confirmDeleteChapter(chapter: ChapterVO) {
 .chapter-node__actions {
   display: flex;
   flex-shrink: 0;
+}
+
+.subject-ai-hint {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-size-aux);
+  line-height: var(--line-height-aux);
+  color: var(--text-secondary);
 }
 </style>

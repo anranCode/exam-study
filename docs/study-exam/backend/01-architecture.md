@@ -191,12 +191,20 @@ public void dispatch() {
 | 场景 | 方法 | 缓存策略 |
 |---|---|---|
 | 精简解析 | `explain(questionId, userAnswer?, force?)` | 写入 `question.ai_analysis`,命中直接返回 |
-| 题目解析生成 | `analysis(type, stem, answerPoints)` / `generateAndSave(questionId)` | 写入 `question.analysis`,不缓存,可重新生成 |
+| 答案/解析生成 | `analysis(type, subject, stem, options, answer, points)` / `generateAndSave(questionId)` | 写入 `question.analysis`;客观题只在空答案时补 `answer`;不缓存,可重新生成 |
 | 变式题 | `variant(questionId)` | 不缓存(每次都出新题),不入库,返回给前端确认 |
 | 记忆口诀 | `mnemonic(knowledgePoint)` | 不缓存,前端可复制保存 |
 | 考前串讲 | `digest(subjectId, force?)` | 写入 `ai_digest`,同科目覆盖更新 |
 
-System Prompt 固定为「自考冲刺辅导老师」人设,核心约束:先点名考点 → 大白话讲对错原因 → 一句记忆提示 → 若带 `userAnswer` 则指出混淆点;讲解全文 **≤ 120 字**,不写学术引申,以 60 分及格为目标。主观题解析生成用另一套人设:根据参考答案要点输出「考点 + ①②③ 采分点 + 口诀」,**120—220 字、简洁好记**。Prompt 模板集中在 `PromptTemplates.java`,不在 Service 里拼字符串。
+System Prompt 固定为「自考冲刺辅导老师」人设,核心约束:先点名考点 → 大白话讲对错原因 → 一句记忆提示 → 若带 `userAnswer` 则指出混淆点;讲解全文 **≤ 120 字**,不写学术引申,以 60 分及格为目标。
+
+答案/解析生成支持**全部题型**,提示词由「科目 + 题型」共同决定:
+- 科目名与 `subject.ai_prompt`(科目专属提示词,优先遵守)追加到 System Prompt,不同科目可以要求不同语言、词汇难度、答题结构;
+- 主观题:先写可直接背的完整答案(短文写作给 120—150 词英语范文 + 中文译文),再写 ≤ 150 字解析;
+- 客观题:先给【答案】再给【解析】;已有标准答案时原样保留、绝不覆盖,只有空答案才回填;
+- 题型不同板块不同(选择/判断/填空 vs 简答/论述/写作),前端按板块渲染。
+
+Prompt 模板集中在 `PromptTemplates.java`,不在 Service 里拼字符串。
 
 调用成功或失败都写 `ai_call_log`(场景、模型、token 数、耗时);异常统一映射为 `code = 6001`,**AI 服务故障绝不影响练习主流程**。
 

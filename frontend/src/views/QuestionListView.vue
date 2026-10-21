@@ -18,8 +18,7 @@ import { useSubjectStore } from '@/stores/subject'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import {
   QUESTION_TYPE_LABEL,
-  QUESTION_TYPE_OPTIONS,
-  isObjective
+  QUESTION_TYPE_OPTIONS
 } from '@/utils/constants'
 import SubjectTag from '@/components/SubjectTag.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -61,11 +60,22 @@ const MAX_AI_BATCH = 20
 
 /** 选中的题里还能入库的(待校对) */
 const draftSelected = computed(() => selectedRows.value.filter((r) => r.status === 'DRAFT'))
-/** 选中的题里适合 AI 生成解析的:主观题 + 有参考答案要点 + 还没有解析 */
+/** 批量 AI 生成时是否连已有解析一起覆盖(默认只补空解析,避免误删手写内容) */
+const overwriteAnalysis = ref(false)
+/**
+ * 选中的题里适合 AI 生成答案/解析的:
+ * 所有题型都行(客观题由后端补空答案),默认只处理还没有解析的题;勾了覆盖则全部处理。
+ * 选择题如果既没有选项也没有答案,生成必然失败,先在列表里排除。
+ */
 const analysisCandidates = computed(() =>
-  selectedRows.value.filter(
-    (r) => !isObjective(r.type) && (r.answerPoints?.length ?? 0) > 0 && !r.analysis?.trim()
-  )
+  selectedRows.value.filter((r) => {
+    if (!r.stem?.trim()) return false
+    const choice =
+      r.type === 'SINGLE_CHOICE' || r.type === 'MULTIPLE_CHOICE' || r.type === 'READING_CHOICE'
+    const hasOptions = (r.options ?? []).some((o) => o.text?.trim())
+    if (choice && !hasOptions && !r.answer?.trim()) return false
+    return overwriteAnalysis.value || !r.analysis?.trim()
+  })
 )
 
 function onSelectionChange(rows: QuestionDetailVO[]) {
@@ -114,10 +124,15 @@ async function batchGenerateAnalysis() {
     ElMessage.warning(`一次最多生成 ${MAX_AI_BATCH} 道,请减少勾选后再试`)
     return
   }
+  const overwrite = overwriteAnalysis.value
   try {
     await ElMessageBox.confirm(
-      `为选中的 ${candidates.length} 道主观题调用 AI 生成解析?只处理还没有解析的题,生成后会直接保存(每道约 10—30 秒)。`,
-      'AI 生成解析',
+      `为选中的 ${candidates.length} 道题调用 AI 生成答案与解析?${
+        overwrite
+          ? '会覆盖这些题已有的解析(客观题已有答案不会被覆盖)。'
+          : '只处理还没有解析的题(客观题顺带补空答案)。'
+      }生成后会直接保存(每道约 10—30 秒)。`,
+      'AI 生成答案与解析',
       { confirmButtonText: '开始生成', cancelButtonText: '取消', type: 'info' }
     )
   } catch {
@@ -138,9 +153,10 @@ async function batchGenerateAnalysis() {
       }
     }
     if (done > 0) {
-      ElMessage.success(`已生成 ${done} 道题的解析${failed ? ',其余已停止' : ''}`)
+      ElMessage.success(`已生成 ${done} 道题的答案与解析${failed ? ',其余已停止' : ''}`)
     }
     clearSelection()
+    overwriteAnalysis.value = false
     await load()
   } catch {
     // 错误提示已由 request.ts 统一弹出
@@ -540,8 +556,9 @@ watch(
             :disabled="analysisCandidates.length === 0 || batchBusy"
             @click="batchGenerateAnalysis"
           >
-            AI 生成解析<template v-if="analysisCandidates.length">({{ analysisCandidates.length }})</template>
+            AI 生成答案/解析<template v-if="analysisCandidates.length">({{ analysisCandidates.length }})</template>
           </el-button>
+          <el-checkbox v-model="overwriteAnalysis" :disabled="batchBusy">覆盖已有解析</el-checkbox>
           <span v-if="batchBusy" class="batch-bar__progress">{{ batchProgress }}</span>
           <el-button text :disabled="batchBusy" @click="clearSelection">取消选择</el-button>
         </div>

@@ -71,33 +71,111 @@ public final class PromptTemplates {
         return sb.toString();
     }
 
-    /** 场景二:根据参考答案要点生成主观题解析(写入 question.analysis)。 */
+    /**
+     * 场景二:根据题目生成「具体答案 + 解析」(写入 question.analysis;客观题可能补 answer)。
+     *
+     * <p>关键:模型必须**先把答案完整写出来**,再写解析。只写「怎么答」对考生没有用,
+     * 尤其短文写作——要直接给一篇可背的英语范文,而不是中文写作指导。
+     */
     public static final String ANALYSIS_ROLE = """
             你是「自考冲刺辅导老师」,学员是在职备考的成年人,目标是 60 分及格。
-            现在要根据一道主观题的「参考答案要点」写一段简洁好记、可以直接背的解析,要求:
-            1. 第一行一句话点明考点(如「考点:实践与认识的辩证关系」)。
-            2. 中间用 ①②③ 分条列出采分点,每条不超过 30 字,写成考场上能直接写的话。
-            3. 最后一行给一句好记的口诀或关键词串联。
-            4. 全文 120—220 字,大白话,不引用教材原文,不写「建议你」「你可以」这类废话。
-            5. 只输出解析正文,不要标题、不要 Markdown 标记、不要代码块。
+            现在要根据一道题目生成「具体答案 + 解析」。
+            硬性要求:
+            1. 先写答案,再写解析;答案必须具体、完整、简洁,不能只讲「怎么写」「要注意什么」。
+            2. 答案语言与题目一致:英语题用英语作答,中文题用中文作答。
+            3. 【答案】/【参考答案】下面直接写答案正文,不要写「这是一篇…」「以下是我的答案」之类的说明。
+            4. 【解析】要针对本题:客观题说明正确项为什么对、干扰项错在哪;主观题说明答案与要点的对应关系。
+            5. 【解析】不超过 150 字,简洁好记。
+            6. 只输出题目要求的板块,不要 Markdown 代码块、不要客套话。
             """;
 
-    /** 主观题解析:把要点改写成简洁、好记、能直接背的答案。 */
-    public static String analysis(QuestionType type, String stem, List<String> points) {
-        String pointLines = points == null ? "" : points.stream()
-                .filter(p -> p != null && !p.isBlank())
-                .map(p -> "  - " + p.trim())
-                .collect(Collectors.joining("\n"));
-        return """
-                请为下面这道自考主观题写一段解析。
+    /**
+     * 主观题 / 客观题的生成提示。板块随题型变化:
+     * 选择判断给【答案】+【解析】,简答论述给【参考答案】+【解析】,写作多一个【译文】。
+     */
+    public static String analysis(QuestionType type, String subjectName, String stem,
+                                  List<OptionItem> options, String answer, List<String> points) {
+        StringBuilder sb = new StringBuilder("请为下面这道自考题目生成具体答案和解析。\n\n");
+        sb.append("【科目】").append(subjectName == null ? "未指定" : subjectName).append('\n');
+        sb.append("【题型】").append(type.getLabel()).append('\n');
+        sb.append("【题干】").append(truncate(stem, 800)).append('\n');
 
-                【题型】%s
-                【题干】%s
-                【参考答案要点】
-                %s
+        if (options != null && !options.isEmpty()) {
+            sb.append("【选项】\n");
+            for (OptionItem o : options) {
+                sb.append("  ").append(o.key()).append(". ").append(o.text()).append('\n');
+            }
+        }
+        if (answer != null && !answer.isBlank()) {
+            sb.append("【已有标准答案】").append(answer.trim())
+                    .append("(【答案】必须与之一致,不要改答案)\n");
+        }
+        if (points != null && !points.isEmpty()) {
+            String pointLines = points.stream()
+                    .filter(p -> p != null && !p.isBlank())
+                    .map(p -> "  - " + p.trim())
+                    .collect(Collectors.joining("\n"));
+            if (!pointLines.isEmpty()) {
+                sb.append("【参考答案要点】\n").append(pointLines).append('\n');
+            }
+        }
 
-                请按人设要求输出,120—220 字;上面每一条要点都必须在解析里覆盖到。
-                """.formatted(type.getLabel(), truncate(stem, 800), pointLines);
+        sb.append("\n【输出板块】\n").append(sectionSpec(type)).append('\n');
+        sb.append("严格按板块输出,不要 Markdown。");
+        return sb.toString();
+    }
+
+    /** 每种题型的输出板块。 */
+    private static String sectionSpec(QuestionType type) {
+        return switch (type) {
+            case WRITING -> """
+                    【参考答案】
+                    <120—150 词的英语短文,分段并覆盖全部要点;不要用中文写范文>
+                    【译文】
+                    <中文翻译>
+                    【解析】
+                    <结构、亮点句型、得分点,不超过 150 字>""";
+            case SHORT_ANSWER -> """
+                    【参考答案】
+                    <简洁分点写出完整答案,覆盖全部要点>
+                    【解析】
+                    <要点与题干的对应关系、记忆提示,不超过 150 字>""";
+            case ESSAY -> """
+                    【参考答案】
+                    <论点 + 论据 + 结论,分点写全>
+                    【解析】
+                    <要点与题干的对应关系、记忆提示,不超过 150 字>""";
+            case MATERIAL_ANALYSIS -> """
+                    【参考答案】
+                    <材料对应 + 理论 + 结论,分点写全>
+                    【解析】
+                    <要点与题干的对应关系、记忆提示,不超过 150 字>""";
+            case MULTIPLE_CHOICE -> """
+                    【答案】
+                    <只写选项字母,按字母升序,如 ABD>
+                    【解析】
+                    <正确项为什么对、其他选项错在哪,不超过 120 字>""";
+            case TRUE_FALSE, READING_JUDGE -> """
+                    【答案】
+                    <只写 T / F / NG>
+                    【解析】
+                    <判断依据、易错点,不超过 120 字>""";
+            case CLOZE_TRANSFORM -> """
+                    【答案】
+                    <只写要填的词或短语,不要解释>
+                    【解析】
+                    <为什么这样填、易错点,不超过 120 字>""";
+            case WORD_FILL, SENTENCE_FILL, SECTION_MATCH -> """
+                    【答案】
+                    <按题目要求只写答案(选项字母或要填的词句),不要解释>
+                    【解析】
+                    <为什么这样填、易错点,不超过 120 字>""";
+            default -> """
+                    【答案】
+                    <只写选项字母>
+                    【解析】
+                    <正确项为什么对、其他选项错在哪,不超过 120 字>""";
+        };
     }
 
     /** 场景三:举一反三,生成同考点变式题。不入库,由前端确认后再保存。 */

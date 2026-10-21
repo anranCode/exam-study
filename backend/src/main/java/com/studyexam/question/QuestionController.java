@@ -128,22 +128,22 @@ public class QuestionController {
     }
 
     @PostMapping("/ai-analysis/preview")
-    @Operation(summary = "AI 生成解析(预览)",
-            description = "根据主观题的参考答案要点生成一段简洁好记的解析,**不写库**。"
-                    + "供编辑页预览:生成后填进表单,保存时随题目一起落库。")
+    @Operation(summary = "AI 生成答案/解析(预览)",
+            description = "按科目 + 题型生成具体答案和解析,**不写库**。供编辑页预览:"
+                    + "客观题返回建议答案(已有答案时原样返回),主观题返回【参考答案】/【解析】板块。"
+                    + "不同科目可使用科目管理里配置的专属提示词。")
     @ApiResultResponses
     public Result<AiAnalysisVO> previewAnalysis(@Valid @RequestBody AiAnalysisRequest dto) {
-        return Result.ok(new AiAnalysisVO(
-                aiAnalysisService.generate(dto.type(), dto.stem(), dto.answerPoints())));
+        return Result.ok(aiAnalysisService.generate(dto));
     }
 
     @PostMapping("/{id}/ai-analysis")
-    @Operation(summary = "AI 生成解析并保存",
-            description = "按这道题已有的参考答案要点生成解析并写入 analysis。"
+    @Operation(summary = "AI 生成答案/解析并保存",
+            description = "生成后写入 analysis;**客观题只在原来没有标准答案时补答案,已有答案绝不覆盖**。"
                     + "题库列表勾选多题时由前端逐题调用。")
     @ApiResultResponses
     public Result<AiAnalysisVO> generateAnalysis(@PathVariable Long id) {
-        return Result.ok(new AiAnalysisVO(aiAnalysisService.generateAndSave(id)));
+        return Result.ok(aiAnalysisService.generateAndSave(id));
     }
 
     // ── 批量导入 ★ ─────────────────────────────────────────

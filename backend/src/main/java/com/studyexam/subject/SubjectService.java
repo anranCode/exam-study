@@ -144,6 +144,15 @@ public class SubjectService {
             subject.setEnabled(dto.enabled());
         }
         subject.setRemark(dto.remark());
+        subject.setAiPrompt(trimToNull(dto.aiPrompt()));
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     /**
@@ -154,7 +163,7 @@ public class SubjectService {
         return new SubjectVO(
                 s.getId(), s.getCode(), s.getName(), s.getShortName(), s.getColor(),
                 s.getExamDate(), s.getExamSlot(), s.getTotalScore(), s.getPassScore(),
-                s.getSortOrder(), s.getEnabled(), s.getRemark(),
+                s.getSortOrder(), s.getEnabled(), s.getRemark(), s.getAiPrompt(),
                 questionCount, dueReviewCount, masteredCount
         );
     }

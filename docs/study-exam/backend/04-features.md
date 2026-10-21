@@ -227,7 +227,10 @@
 **要做的事**
 
 1. `AiConfig`:从配置读 DashScope API Key、base-url、模型名、超时。
-2. `PromptTemplates`:各场景的 System Prompt 集中定义(精简解析 / 主观题解析生成 / 变式题 / 口诀 / 串讲),按「精简、考点、60 分」原则撰写;讲解类超过 120 字视为不合格输出,主观题解析生成要求 120—220 字、简洁好记。
+2. `PromptTemplates`:各场景的 System Prompt 集中定义(精简解析 / 答案解析生成 / 变式题 / 口诀 / 串讲);答案解析生成**按科目 + 题型**输出:
+   - 科目名 + `subject.ai_prompt`(V11 新增,科目专属提示词)追加到 System Prompt 并优先遵守;
+   - 主观题先写完整答案(短文写作给 120—150 词英语范文 + 译文)、再写 ≤ 150 字解析;
+   - 客观题先给【答案】再给【解析】,已有标准答案绝不覆盖,空答案才回填。
 3. `AiService`:
 
    - `explain(questionId, userAnswer, force)`:命中缓存直接返回;否则组装 Prompt(题干 + 选项 + 正确答案 + 解析 + 用户错选)调用千问,成功后把结果写入 `question.ai_analysis`。

@@ -60,6 +60,11 @@ public record SubjectUpsertDTO(
 
         @Schema(description = "备注")
         @Size(max = 255, message = "备注最长 255 个字符")
-        String remark
+        String remark,
+
+        @Schema(description = "AI 生成答案/解析时的科目专属提示词,可空",
+                example = "答案一律用英文,词汇不超过四级;写作题 120—150 词")
+        @Size(max = 2000, message = "AI 提示词最长 2000 个字符")
+        String aiPrompt
 ) {
 }

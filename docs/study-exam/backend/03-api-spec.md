@@ -76,10 +76,14 @@
     "dueReviewCount": 12,
     "masteredCount": 205,
     "sortOrder": 1,
-    "enabled": true
+    "enabled": true,
+    "aiPrompt": "答案一律用英文,词汇不超过四级;写作题 120—150 词。"
   }
 ]
 ```
+
+`aiPrompt` 是科目专属的 AI 提示词(可空):生成答案/解析时追加到系统提示词,并标记为优先遵守。
+不同科目可以写不同要求(语言、词汇难度、答题结构、解析长度等)。
 
 ---
 
@@ -102,11 +106,11 @@ GET /questions?subjectId=1&chapterId=3&type=SINGLE_CHOICE&keyword=矛盾&sourceY
 | PUT | `/questions/{id}` | 修改题目 |
 | DELETE | `/questions/{id}` | 删除(级联清理答题记录与复习队列) |
 | POST | `/questions/batch-publish` | 批量入库:把选中的待校对题改为 PUBLISHED |
-| POST | `/questions/ai-analysis/preview` | 按题型 / 题干 / 参考答案要点生成解析(不写库,编辑页用) |
-| POST | `/questions/{id}/ai-analysis` | 生成解析并写入该题的 `analysis`(题库批量用) |
+| POST | `/questions/ai-analysis/preview` | 按科目 + 题型生成答案/解析(不写库,编辑页用) |
+| POST | `/questions/{id}/ai-analysis` | 生成答案/解析并保存(题库批量用) |
 | GET | `/questions/random?subjectId=&count=` | 随机取题(仅调试用) |
 
-**批量入库 / AI 生成解析**:
+**批量入库 / AI 生成答案与解析**:
 
 ```
 POST /questions/batch-publish
@@ -117,15 +121,25 @@ body: { "ids": [101, 102] }          // 单次最多 200;已是 PUBLISHED 的跳
 ```
 POST /questions/ai-analysis/preview
 body: {
-  "type": "SHORT_ANSWER",
-  "stem": "简述实践与认识的辩证关系",
-  "answerPoints": ["实践是认识的基础", "认识反作用于实践"]
+  "subjectId": 1,
+  "type": "SINGLE_CHOICE",
+  "stem": "马克思主义哲学的基本问题是（  ）",
+  "options": [{"key":"A","text":"物质和意识的关系问题"},{"key":"B","text":"思维和存在的关系问题"}],
+  "answer": null,                    // 已有标准答案时原样传;为空表示让 AI 判断
+  "answerPoints": null
 }
-→ { "analysis": "考点:…… ①…… ②…… 口诀:……" }
+→ { "answer": "B", "analysis": "B 正确,因为……" }
 ```
 
-条件:必须是主观题、必须有参考答案要点。走系统已配置的 AI(见第八节);
-`POST /questions/{id}/ai-analysis` 无请求体,生成后直接写回 `question.analysis`。
+主观题请求同样带 `subjectId` / `type` / `stem`,再带 `answerPoints`;响应的 `answer` 为 `null`,
+`analysis` 包含 `【参考答案】`(+ 写作的 `【译文】`)与 `【解析】` 板块。
+
+规则:
+- 所有题型都支持;科目、题型都参与提示词,并使用该科目在科目管理里配置的 `aiPrompt`。
+- **客观题**:AI 只判断答案并解释;**已有标准答案时绝不覆盖**,只有答案为空才补;
+  写入时解析只保存【解析】正文,题目自带的「正确答案」单独展示。
+- **主观题**:答案与解析都写进 `analysis`,前端按板块渲染。
+- 走系统已配置的 AI(见第八节);`POST /questions/{id}/ai-analysis` 无请求体。
 
 **POST `/questions` 请求体**:
 
@@ -445,8 +459,8 @@ POST /practice/sessions/{sessionId}/finish
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| POST | `/questions/ai-analysis/preview` | 按表单里的题型 / 题干 / 要点生成主观题解析(不写库) |
-| POST | `/questions/{id}/ai-analysis` | 生成解析并写入 `question.analysis` |
+| POST | `/questions/ai-analysis/preview` | 按科目 + 题型 / 题干 / 选项 / 已有答案生成答案与解析(不写库) |
+| POST | `/questions/{id}/ai-analysis` | 生成答案与解析并保存;客观题只补空答案 |
 | POST | `/ai/explain` | 生成 / 获取某题的 AI 精简解析 |
 | POST | `/ai/variant` | 针对某题生成一道同考点变式题 |
 | POST | `/ai/mnemonic` | 针对知识点生成记忆口诀 |
@@ -454,8 +468,12 @@ POST /practice/sessions/{sessionId}/finish
 | GET | `/ai/digest?subjectId=1` | 读取已生成的串讲清单 |
 | GET | `/ai/usage?days=30` | AI 用量统计(token 消耗,核算 TokenPlan) |
 
-**主观题解析生成**走 `ANALYSIS` 场景:只接受主观题 + 非空参考答案要点,
-Prompt 要求输出「考点 + ①②③ 采分点 + 口诀」,全文 120—220 字、口语化、好记;
+**答案/解析生成**走 `ANALYSIS` 场景,支持全部题型;提示词由「科目(name + `aiPrompt`)+ 题型」共同决定:
+- 主观题输出 `【参考答案】`(+ 短文写作的 `【译文】`)→ `【解析】`;
+  短文写作的答案必须是 **120—150 词的英语范文**,严禁用中文写写作指导;
+- 客观题输出 `【答案】` → `【解析】`;已有标准答案时答案原样保留、绝不覆盖,只有空答案才补;
+- 解析控制在 150 字内(客观题 120 字内),简洁好记。
+
 调用沿用系统已配置的 AI(`DASHSCOPE_API_KEY`),失败返回 6001。
 
 **`POST /ai/explain` 请求体**:

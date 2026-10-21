@@ -21,6 +21,7 @@ public record SubjectVO(
         @Schema(description = "排序", example = "1") Integer sortOrder,
         @Schema(description = "是否参与每日任务") Boolean enabled,
         @Schema(description = "备注") String remark,
+        @Schema(description = "AI 生成答案/解析时的科目专属提示词") String aiPrompt,
         @Schema(description = "题目数量", example = "320") long questionCount,
         @Schema(description = "到期复习数量", example = "12") long dueReviewCount,
         @Schema(description = "已掌握数量", example = "205") long masteredCount

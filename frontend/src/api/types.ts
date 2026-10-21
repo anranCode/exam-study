@@ -57,6 +57,8 @@ export interface SubjectVO {
   sortOrder: number
   enabled: boolean
   remark: string | null
+  /** AI 生成答案/解析时的科目专属提示词 */
+  aiPrompt: string | null
   questionCount: number
   dueReviewCount: number
   masteredCount: number
@@ -74,6 +76,8 @@ export interface SubjectUpsertDTO {
   sortOrder?: number
   enabled?: boolean
   remark?: string | null
+  /** AI 生成答案/解析时的科目专属提示词,可空 */
+  aiPrompt?: string | null
 }
 
 /* ---------------- 章节 ---------------- */
@@ -420,15 +424,19 @@ export interface QuestionQuery {
   sort?: string
 }
 
-/** AI 生成的解析(预览或已保存) */
+/** AI 生成的答案/解析。客观题 answer 有值,主观题为 null(答案在 analysis 的【参考答案】板块) */
 export interface AiAnalysisVO {
+  answer: string | null
   analysis: string
 }
 
 export interface AiAnalysisRequest {
+  subjectId: number
   type: string
   stem: string
-  answerPoints: string[]
+  options: QuestionOption[] | null
+  answer: string | null
+  answerPoints: string[] | null
 }
 
 /* ---------------- 批量导入(阶段 3) ---------------- */

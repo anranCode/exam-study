@@ -93,13 +93,9 @@ const editableOptions = computed(
 const isMulti = computed(() => form.type === 'MULTIPLE_CHOICE')
 const isReadingJudge = computed(() => form.type === 'READING_JUDGE')
 
-/** 只有「主观题 + 有参考答案要点 + 有题干」才允许 AI 生成解析 */
+/** 有科目 + 题型 + 题干就可以让 AI 生成;客观题会补空答案,主观题生成参考答案+解析 */
 const canGenerateAnalysis = computed(
-  () =>
-    form.type !== '' &&
-    !objective.value &&
-    form.stem.trim().length > 0 &&
-    form.answerPoints.some((p) => p.trim().length > 0)
+  () => form.subjectId != null && form.type !== '' && form.stem.trim().length > 0
 )
 const generatingAnalysis = ref(false)
 
@@ -344,14 +340,18 @@ function buildPayload(): QuestionUpsertDTO {
 }
 
 /**
- * 让 AI 按参考答案要点写一段简洁好记的解析,填进表单(保存时才落库)。
- * 新建的题还没有 ID,所以走「预览」接口而不是按 ID 保存。
+ * 让 AI 按「科目 + 题型」生成具体答案和解析,填进表单(保存时才落库)。
+ *
+ * <p>客观题:只有答案为空时才回填 AI 判断,已有答案绝不覆盖;主观题:解析里带【参考答案】。
+ * 新建的题还没有 ID,所以走「预览」接口。
  */
 async function generateAnalysis() {
   if (!canGenerateAnalysis.value || generatingAnalysis.value) return
+  const subjectId = form.subjectId
+  if (subjectId == null) return
   if (form.analysis.trim()) {
     try {
-      await ElMessageBox.confirm('解析里已有内容,AI 生成会覆盖它。继续?', 'AI 生成解析', {
+      await ElMessageBox.confirm('解析里已有内容,AI 生成会覆盖它。继续?', 'AI 生成答案/解析', {
         confirmButtonText: '覆盖生成',
         cancelButtonText: '取消',
         type: 'warning'
@@ -363,16 +363,50 @@ async function generateAnalysis() {
   generatingAnalysis.value = true
   try {
     const result = await previewQuestionAnalysis({
+      subjectId,
       type: form.type,
       stem: form.stem.trim(),
-      answerPoints: form.answerPoints.map((p) => p.trim()).filter(Boolean)
+      options: buildOptions(),
+      answer: objective.value ? currentAnswer() : null,
+      answerPoints: objective.value
+        ? null
+        : form.answerPoints.map((p) => p.trim()).filter(Boolean)
     })
     form.analysis = result.analysis
+    if (result.answer) {
+      fillAnswerIfEmpty(result.answer)
+    }
     ElMessage.success('已生成,保存后生效')
   } catch {
     // 错误提示已由 request.ts 统一弹出
   } finally {
     generatingAnalysis.value = false
+  }
+}
+
+/** 当前表单里的客观题答案(多选按字母升序) */
+function currentAnswer(): string | null {
+  if (!objective.value) return null
+  if (isMulti.value) {
+    return form.answerMultiple.length ? [...form.answerMultiple].sort().join('') : null
+  }
+  return form.answerSingle.trim() || null
+}
+
+/** AI 答案只补空:已有答案不覆盖 */
+function fillAnswerIfEmpty(answer: string) {
+  if (!objective.value) return
+  if (isMulti.value) {
+    if (form.answerMultiple.length > 0) return
+    form.answerMultiple = answer
+      .toUpperCase()
+      .replace(/[^A-Z]/g, '')
+      .split('')
+      .filter(Boolean)
+    return
+  }
+  if (!form.answerSingle.trim()) {
+    form.answerSingle = answer
   }
 }
 
@@ -603,7 +637,7 @@ onMounted(async () => {
             placeholder="解析内容"
           />
           <p v-if="canGenerateAnalysis" class="analysis-hint">
-            按参考答案要点生成简洁好记的解析,生成后仍可手动修改。
+            按科目 + 题型生成具体答案和解析;客观题只补空答案,已有答案不会被覆盖。
           </p>
         </el-form-item>
 

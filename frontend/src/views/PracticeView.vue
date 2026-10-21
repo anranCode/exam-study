@@ -17,6 +17,7 @@ import { usePracticeStore } from '@/stores/practice'
 import { useTodayStore } from '@/stores/today'
 import { useAnswerFlow } from '@/composables/useAnswerFlow'
 import { PRACTICE_MODE_LABEL } from '@/utils/constants'
+import { splitAnalysis } from '@/utils/analysis'
 import type { PracticeMode, PracticeSessionCreateDTO } from '@/api/types'
 
 const route = useRoute()
@@ -65,6 +66,11 @@ const modeParam = computed(() => String(route.params.mode ?? '').toLowerCase())
 const modeLabel = computed(() => PRACTICE_MODE_LABEL[modeParam.value as PracticeMode] ?? '练习')
 const nextLabel = computed(() => (store.isLastQuestion ? '查看本轮结果' : '下一题'))
 const progressValue = computed(() => store.currentIndex + (graded.value ? 1 : 0))
+/**
+ * AI 解析按「【参考答案】/【译文】/【解析】」分块展示:先给能直接背的答案,再给解析。
+ * 没有板块标题的旧解析/手写解析会作为一个整段返回,不会丢内容。
+ */
+const analysisSections = computed(() => splitAnalysis(record.value?.result.analysis))
 
 function numOrNull(value: unknown): number | null {
   if (value == null || value === '') return null
@@ -382,8 +388,15 @@ onUnmounted(() => {
               <p class="analysis__text wrap-anywhere">{{ record.result.correctAnswer }}</p>
             </section>
 
-            <section v-if="record?.result.analysis" class="analysis">
-              <p class="analysis__text wrap-anywhere">{{ record.result.analysis }}</p>
+            <section v-if="analysisSections.length" class="analysis">
+              <div
+                v-for="(part, i) in analysisSections"
+                :key="i"
+                class="analysis__section"
+              >
+                <p v-if="part.title" class="analysis__hint">{{ part.title }}</p>
+                <p class="analysis__text wrap-anywhere">{{ part.body }}</p>
+              </div>
             </section>
           </template>
         </section>
@@ -621,8 +634,15 @@ onUnmounted(() => {
 .analysis__hint {
   margin-bottom: var(--space-xs);
   font-size: var(--font-size-aux);
+  font-weight: 600;
   line-height: var(--line-height-aux);
-  color: var(--text-secondary);
+  color: var(--color-primary);
+}
+
+.analysis__section + .analysis__section {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed var(--border-color);
 }
 
 .analysis__text {
