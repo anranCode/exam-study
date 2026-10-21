@@ -33,6 +33,8 @@ interface PersistedSession {
   answeredMap: Record<number, AnswerRecord>
   startedAt: number
   elapsedSeconds: number
+  /** 模拟考试限时(分钟);普通练习为空 */
+  durationMin: number | null
 }
 
 /** 把选中字母规范成后端答案格式:多选升序连写,其余取单个字母 */
@@ -55,6 +57,8 @@ export const usePracticeStore = defineStore('practice', () => {
   const status = ref<PracticeStatus>('IDLE')
   const startedAt = ref(0)
   const elapsedSeconds = ref(0)
+  /** 模拟考试限时(分钟);普通练习为空 */
+  const durationMin = ref<number | null>(null)
   /** 当前题在本地选中的选项(仅提交前有效) */
   const selectedKeys = ref<string[]>([])
   /** 本轮汇总(finishSession 后供 ResultView 使用) */
@@ -84,7 +88,8 @@ export const usePracticeStore = defineStore('practice', () => {
       currentIndex: currentIndex.value,
       answeredMap: answeredMap.value,
       startedAt: startedAt.value,
-      elapsedSeconds: elapsedSeconds.value
+      elapsedSeconds: elapsedSeconds.value,
+      durationMin: durationMin.value
     }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
@@ -119,6 +124,7 @@ export const usePracticeStore = defineStore('practice', () => {
     ongoingSessionId.value = vo.ongoingSessionId ?? null
     startedAt.value = Date.now()
     elapsedSeconds.value = 0
+    durationMin.value = vo.durationMin ?? null
     status.value = questions.value.length > 0 ? 'ANSWERING' : 'FINISHED'
     persist()
     return vo
@@ -253,6 +259,7 @@ export const usePracticeStore = defineStore('practice', () => {
       answeredMap.value = data.answeredMap ?? {}
       startedAt.value = data.startedAt || Date.now()
       elapsedSeconds.value = data.elapsedSeconds ?? 0
+      durationMin.value = data.durationMin ?? null
       selectedKeys.value = []
       summary.value = null
       const current = currentQuestion.value
@@ -275,6 +282,7 @@ export const usePracticeStore = defineStore('practice', () => {
     status.value = 'IDLE'
     startedAt.value = 0
     elapsedSeconds.value = 0
+    durationMin.value = null
     summary.value = null
     ongoingSessionId.value = null
     clearStorage()
@@ -295,6 +303,7 @@ export const usePracticeStore = defineStore('practice', () => {
     status,
     startedAt,
     elapsedSeconds,
+    durationMin,
     selectedKeys,
     summary,
     ongoingSessionId,

@@ -115,15 +115,19 @@ public class PracticeService {
 
         SessionGenerator.Picked picked = sessionGenerator.generate(
                 dto.mode(), dto.subjectId(), dto.chapterId(), dto.count(), dto.paperId(),
-                dto.questionIds(), dto.types());
+                dto.questionIds(), dto.types(), dto.sections());
 
         PracticeSession session = new PracticeSession();
         session.setUserId(USER_ID);
         session.setMode(dto.mode().trim().toUpperCase());
         session.setSubjectId(dto.subjectId());
         session.setPaperId(picked.paperId());
+        session.setDurationMin(normalizeDuration(dto.mode(), dto.durationMin()));
         session.setStatus("ONGOING");
         session.setTotalCount(picked.questions().size());
+        // 记下出题顺序:模拟考试交卷时要按整卷统计,没答的题也得计入满分
+        session.setQuestionIds(picked.questions().stream()
+                .map(p -> p.question().getId()).toList());
         session.setScore(BigDecimal.ZERO);
         PracticeSession saved = sessionRepository.save(session);
 
@@ -135,7 +139,15 @@ public class PracticeService {
 
         log.info("创建练习场次 id={} mode={} 题数={}", saved.getId(), saved.getMode(), questions.size());
         return new PracticeSessionVO(saved.getId(), saved.getMode(), questions.size(),
-                totalScore, previousOngoingId, questions);
+                totalScore, previousOngoingId, questions, saved.getDurationMin());
+    }
+
+    /** 模拟考试的限时:1—300 分钟;没传按 150 分钟(正式考试常见时长),普通练习为空。 */
+    private Integer normalizeDuration(String mode, Integer minutes) {
+        if (minutes != null) {
+            return Math.min(300, Math.max(1, minutes));
+        }
+        return mode != null && "MOCK".equalsIgnoreCase(mode.trim()) ? 150 : null;
     }
 
     // ── 提交单题作答 ────────────────────────────────────────
@@ -298,8 +310,15 @@ public class PracticeService {
                 .orElseThrow(() -> BusinessException.of(ErrorCode.SESSION_NOT_FOUND,
                         "练习场次不存在:id=" + sessionId));
         List<AnswerRecord> answers = answerRepository.findBySessionIdOrderByIdAsc(sessionId);
-        Map<Long, Question> questions = loadQuestions(answers.stream()
-                .map(AnswerRecord::getQuestionId).toList());
+        Map<Long, AnswerRecord> answerByQuestion = new HashMap<>();
+        for (AnswerRecord a : answers) {
+            answerByQuestion.put(a.getQuestionId(), a);
+        }
+        List<Long> order = session.getQuestionIds();
+        if (order == null || order.isEmpty()) {
+            order = answers.stream().map(AnswerRecord::getQuestionId).toList();
+        }
+        Map<Long, Question> questions = loadQuestions(order);
         java.util.Set<Long> subjectIds = questions.values().stream()
                 .map(Question::getSubjectId).collect(Collectors.toSet());
         if (session.getSubjectId() != null) {
@@ -309,21 +328,29 @@ public class PracticeService {
         Map<Long, Chapter> chapters = loadChapters(questions.values().stream()
                 .map(Question::getChapterId).filter(Objects::nonNull).collect(Collectors.toSet()));
 
+        BigDecimal totalScore = BigDecimal.ZERO;
         List<SessionAnswerVO> answerVOs = new ArrayList<>();
-        for (AnswerRecord a : answers) {
-            Question q = questions.get(a.getQuestionId());
+        // 按整卷顺序输出:模拟考试没作答的题也在这里,前端结果页刷新后统计才不会缩水
+        for (Long questionId : order) {
+            Question q = questions.get(questionId);
             if (q == null) {
                 continue;
             }
+            totalScore = totalScore.add(q.getScore() == null ? BigDecimal.ZERO : q.getScore());
+            AnswerRecord a = answerByQuestion.get(questionId);
             Subject subject = subjects.get(q.getSubjectId());
             Chapter chapter = q.getChapterId() == null ? null : chapters.get(q.getChapterId());
             answerVOs.add(new SessionAnswerVO(
                     q.getId(), q.getStem(), q.getType(), typeLabel(q),
                     subject == null ? null : subject.getShortName(),
                     chapter == null ? null : chapter.getName(),
-                    a.getUserAnswer(), a.getIsCorrect(), a.getConfidence(),
-                    a.getSelfScore(), a.getTotalPoints(),
-                    q.getAnswer(), q.getAnswerPoints(), q.getAnalysis(), a.getAnsweredAt()));
+                    a == null ? null : a.getUserAnswer(),
+                    a == null ? null : a.getIsCorrect(),
+                    a == null ? null : a.getConfidence(),
+                    a == null ? null : a.getSelfScore(),
+                    a == null ? null : a.getTotalPoints(),
+                    q.getAnswer(), q.getAnswerPoints(), q.getAnalysis(),
+                    a == null ? null : a.getAnsweredAt()));
         }
 
         Subject sessionSubject = session.getSubjectId() == null ? null : subjects.get(session.getSubjectId());
@@ -331,7 +358,7 @@ public class PracticeService {
                 session.getId(), session.getMode(), session.getStatus(),
                 sessionSubject == null ? null : sessionSubject.getShortName(),
                 session.getTotalCount(), session.getAnsweredCount(), session.getCorrectCount(),
-                session.getScore(), null, accuracy(answers),
+                session.getScore(), totalScore.setScale(1, RoundingMode.HALF_UP), accuracy(answers),
                 session.getStartedAt(), session.getFinishedAt(), session.getDurationSeconds(),
                 answerVOs);
     }
@@ -435,8 +462,17 @@ public class PracticeService {
 
     private SessionSummaryVO buildSummary(PracticeSession session, List<AnswerRecord> answers,
                                           LocalDateTime from, LocalDateTime to) {
-        Map<Long, Question> questions = loadQuestions(answers.stream()
-                .map(AnswerRecord::getQuestionId).toList());
+        Map<Long, AnswerRecord> answerByQuestion = new HashMap<>();
+        for (AnswerRecord a : answers) {
+            answerByQuestion.put(a.getQuestionId(), a);
+        }
+        // 按出题顺序遍历整卷:没作答的题也计入满分并列为未作答。
+        // 老数据没有 question_ids 时退回「本场答过的题」,行为与以前一致。
+        List<Long> order = session.getQuestionIds();
+        if (order == null || order.isEmpty()) {
+            order = answers.stream().map(AnswerRecord::getQuestionId).toList();
+        }
+        Map<Long, Question> questions = loadQuestions(order);
         Map<Long, Subject> subjects = loadSubjects(questions.values().stream()
                 .map(Question::getSubjectId).collect(Collectors.toSet()));
 
@@ -446,15 +482,24 @@ public class PracticeService {
         int correct = 0;
         List<SessionSummaryVO.WrongQuestion> wrong = new ArrayList<>();
 
-        for (AnswerRecord a : answers) {
-            Question q = questions.get(a.getQuestionId());
+        for (Long questionId : order) {
+            Question q = questions.get(questionId);
             if (q == null) {
                 continue;
             }
             BigDecimal qScore = q.getScore() == null ? BigDecimal.ZERO : q.getScore();
             totalScore = totalScore.add(qScore);
             Subject subject = subjects.get(q.getSubjectId());
+            AnswerRecord a = answerByQuestion.get(questionId);
 
+            if (a == null) {
+                // 提前交卷 / 超时:未作答的题按错题列出
+                wrong.add(new SessionSummaryVO.WrongQuestion(
+                        q.getId(), q.getStem(), q.getType(), typeLabel(q),
+                        subject == null ? null : subject.getShortName(),
+                        null, q.getAnswer(), false));
+                continue;
+            }
             if (a.getIsCorrect() != null) {
                 objectiveAnswered++;
                 if (a.getIsCorrect()) {

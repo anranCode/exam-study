@@ -11,13 +11,14 @@
 
 | 部分 | 状态 |
 |---|---|
-| 数据库 | ✅ 建库 + 8 个 Flyway 迁移(15 张表),含当前题库与学习进度快照 |
+| 数据库 | ✅ 建库 + 13 个 Flyway 迁移(15 张表),含当前题库与学习进度快照 |
 | 后端骨架 | ✅ 统一响应 / 错误码 / 全局异常 / CORS / Swagger / 健康检查 |
 | 科目与章节 | ✅ 增删改查全部可用(含删除守卫、章节两级树) |
 | 题库核心 | ✅ 题目增删改查、按题型校验、中文题干检索、分页 |
 | 批量导入 | ✅ JSON 文件 / JSON body 两个入口,逐条容错、**题干去重**、半数回滚、自动建试卷 |
 | **导入记录** | ✅ 每次导入漏掉的题目(题干 + 原因)与识别提醒留档,可回看、复制题干,补录后删除 |
 | **练习与判分** | ✅ 五种组题模式、客观题自动判分、主观题逐条自评、幂等提交 |
+| **模拟考试** | ✅ 按最近一份真题的题型结构组卷,勾选题型与题量、限时作答;交卷按整卷统计(未答也计入满分) |
 | **复习排期(SM-2)** | ✅ 三态排期(确定 / 没把握 / 答错)、间隔 1→3→8 天、掌握后出队 |
 | 统计口径 | ✅ 正确率只算客观题;连续打卡按「当天确实做过题」判定 |
 | AI 配置 | ✅ 千问 TokenPlan 已打通(Anthropic 兼容接口,密钥走环境变量) |
@@ -277,7 +278,7 @@ app/
 
 ## 九、部署到服务器(数据随迁移一起带走)
 
-Flyway 迁移 V1—V8 已经包含建表、四条初始科目,以及**本机当前数据快照**
+Flyway 迁移 V1—V13 已经包含建表、四条初始科目,以及**本机当前数据快照**
 (1354 道题、27 份试卷、错题本排期、练习与答题记录等)。因此全新服务器上
 **不需要手工导入任何 SQL**,首次启动就会自动建表并灌好数据。
 
@@ -310,13 +311,13 @@ java -jar study-exam-backend-0.1.0.jar
 ### 3. 数据快照的边界
 
 V8 是 **2026-10-18 生成的快照**。之后在本机新导入的题目、新做的练习不会自动进入 V8。
-需要把最新数据带到服务器时,加一个 V9 迁移重新导出一份即可(先 `mysqldump` 导出,
+需要把最新数据带到服务器时,用下一个空版本(目前是 V14)重新导出一份即可(先 `mysqldump` 导出,
 再把 `INSERT INTO` 换成 `INSERT IGNORE INTO`,这样在已有数据的机器上重复执行也不会产生副本):
 
 ```bash
 mysqldump -uroot -p --default-character-set=utf8mb4 --no-create-info --complete-insert \
   --skip-comments --skip-add-locks --skip-disable-keys --single-transaction \
-  --result-file=backend/src/main/resources/db/migration/V9__seed_latest.sql \
+  --result-file=backend/src/main/resources/db/migration/V14__seed_latest.sql \
   study_exam chapter question paper paper_question practice_session answer_record review_item study_log import_log
 ```
 

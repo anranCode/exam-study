@@ -16,11 +16,16 @@ import {
  * 题干卡片:题型标签 + 分值 + 科目标签 → 题干(17px/1.75,pre-wrap)→ 选项 → 判定后解析。
  * 主观题不显示选项与解析(主观题分支由 PracticeView 负责)。
  */
-const props = defineProps<{
-  question: PracticeQuestionVO
-  selectedKeys: string[]
-  record: AnswerRecord | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    question: PracticeQuestionVO
+    selectedKeys: string[]
+    record: AnswerRecord | null
+    /** false = 模拟考试模式:提交后不显示对错与解析 */
+    reveal?: boolean
+  }>(),
+  { reveal: true }
+)
 
 const emit = defineEmits<{
   (e: 'select', key: string): void
@@ -69,7 +74,7 @@ const correctKeys = computed<string[]>(() => {
 
 function stateFor(key: string): OptionVisualState {
   const rec = props.record
-  if (rec) {
+  if (rec && props.reveal) {
     if (correctKeys.value.includes(key)) return 'correct'
     if (rec.selected.includes(key)) return 'wrong'
     return 'default'
@@ -126,8 +131,8 @@ const graded = computed(() => !!props.record)
       </p>
     </div>
 
-    <!-- 解析区:仅客观题判定后展开(答错自动展开,无需额外点击) -->
-    <section v-if="objective && graded" class="analysis">
+    <!-- 解析区:仅客观题判定后展开(答错自动展开,无需额外点击);模拟考试中不展开 -->
+    <section v-if="objective && reveal && graded" class="analysis">
       <div class="analysis__row">
         <span class="analysis__label">正确答案</span>
         <span class="analysis__correct mono">{{ record?.result.correctAnswer ?? '—' }}</span>

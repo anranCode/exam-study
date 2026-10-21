@@ -6,6 +6,7 @@ import com.studyexam.paper.Paper;
 import com.studyexam.paper.PaperQuestion;
 import com.studyexam.paper.PaperQuestionRepository;
 import com.studyexam.paper.PaperRepository;
+import com.studyexam.practice.dto.MockSectionDTO;
 import com.studyexam.question.Question;
 import com.studyexam.question.QuestionRepository;
 import com.studyexam.question.QuestionType;
@@ -16,9 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -70,6 +73,12 @@ public class SessionGenerator {
     @Transactional(readOnly = true)
     public Picked generate(String mode, Long subjectId, Long chapterId, Integer count, Long paperId,
                            List<Long> questionIds, List<String> types) {
+        return generate(mode, subjectId, chapterId, count, paperId, questionIds, types, null);
+    }
+
+    @Transactional(readOnly = true)
+    public Picked generate(String mode, Long subjectId, Long chapterId, Integer count, Long paperId,
+                           List<Long> questionIds, List<String> types, List<MockSectionDTO> sections) {
         String m = mode == null ? "" : mode.trim().toUpperCase();
         int n = normalizeCount(count);
         // 指定了题目就照单出题,不再看组题模式——错题本里「立即复习」某一道走的是这条
@@ -81,7 +90,7 @@ public class SessionGenerator {
             case "DAILY" -> daily(subjectId, chapterId, n);
             case "RANDOM" -> random(subjectId, chapterId, typeFilter, n);
             case "CHAPTER" -> chapter(subjectId, chapterId, typeFilter, n);
-            case "MOCK" -> mock(paperId);
+            case "MOCK" -> mock(paperId, subjectId, sections);
             case "REVIEW" -> review(subjectId, typeFilter, n);
             case "WRONG" -> wrong(subjectId, typeFilter, n);
             default -> throw BusinessException.of(ErrorCode.PARAM_INVALID,
@@ -177,8 +186,56 @@ public class SessionGenerator {
         return new Picked(null, picked);
     }
 
+    /** 模拟考试:优先按指定试卷完整出题,否则按题型结构现场组卷。 */
+    private Picked mock(Long paperId, Long subjectId, List<MockSectionDTO> sections) {
+        if (paperId != null) {
+            return mockByPaper(paperId);
+        }
+        if (sections != null && !sections.isEmpty()) {
+            return mockBySections(subjectId, sections);
+        }
+        throw BusinessException.of(ErrorCode.PARAM_INVALID,
+                "模拟考试必须指定试卷(paperId)或题型结构(sections)");
+    }
+
+    /**
+     * 按「题型 + 数量」组一套卷子。
+     *
+     * <p>这是「模拟测试」的核心:结构来自真题(单选 25 道、简答 5 道……),
+     * 题目从题库里对应题型的已发布题目中随机抽。某个题型题量不够时能抽几道算几道,
+     * 一道都抽不到才报错——前端会把可用题数显示出来,正常情况下不会走到这里。
+     */
+    private Picked mockBySections(Long subjectId, List<MockSectionDTO> sections) {
+        if (subjectId == null) {
+            throw BusinessException.of(ErrorCode.PARAM_INVALID, "subjectId: 模拟考试必须指定科目");
+        }
+        List<PickedQuestion> picked = new ArrayList<>();
+        Set<Long> seen = new HashSet<>();
+        for (MockSectionDTO section : sections) {
+            if (section == null || section.type() == null || section.type().isBlank()) {
+                continue;
+            }
+            int count = section.count() == null ? 0 : section.count();
+            if (count <= 0) {
+                continue;
+            }
+            QuestionType type = QuestionType.find(section.type().trim().toUpperCase())
+                    .orElseThrow(() -> BusinessException.of(ErrorCode.PARAM_INVALID,
+                            "sections: 未知题型 \"" + section.type() + "\""));
+            List<Question> questions = questionRepository.pickRandom(subjectId, null, true,
+                    List.of(type.name()), NO_EXCLUSION, Math.min(count, MAX_COUNT));
+            for (Question q : questions) {
+                if (seen.add(q.getId())) {
+                    picked.add(new PickedQuestion(q, false, type.getLabel()));
+                }
+            }
+        }
+        ensureNotEmpty(picked, "题库里没有这些题型的已发布题目,先去题库补题或调整题型结构");
+        return new Picked(null, picked);
+    }
+
     /** 按试卷的原始顺序与分值完整出一套。 */
-    private Picked mock(Long paperId) {
+    private Picked mockByPaper(Long paperId) {
         if (paperId == null) {
             throw BusinessException.of(ErrorCode.PARAM_INVALID, "paperId: 模拟考试必须指定试卷");
         }

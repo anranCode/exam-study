@@ -197,6 +197,41 @@ export interface PracticeSessionCreateDTO {
   questionIds?: number[] | null
   /** 题型筛选:只抽这几种题型,空表示不限(RANDOM / CHAPTER / REVIEW / WRONG 生效) */
   types?: string[] | null
+  /** 模拟考试的题型结构:MOCK 且没有 paperId 时按它组卷 */
+  sections?: MockSectionDTO[] | null
+  /** 模拟考试限时(分钟);为空按 150 */
+  durationMin?: number | null
+}
+
+/** 模拟考试的一段:题型 + 题数 */
+export interface MockSectionDTO {
+  type: string
+  count: number
+}
+
+/** GET /practice/mock/template —— 从真题试卷读出的组卷模板 */
+export interface MockTemplateSection {
+  type: string
+  typeLabel: string
+  /** 真题里的题数 */
+  count: number
+  /** 每题分值(取该题型在卷内的最小分值) */
+  score: number | null
+  /** 题库里已发布、可抽的题数 */
+  available: number
+}
+
+export interface MockTemplateVO {
+  subjectId: number
+  subjectShortName: string | null
+  subjectName: string | null
+  /** 参考的真题试卷;没有可参考的真题时为 null */
+  paperId: number | null
+  paperName: string | null
+  year: number | null
+  totalScore: number | null
+  durationMin: number | null
+  sections: MockTemplateSection[]
 }
 
 /** 练习中的题目:★ 绝不含 answer / answerPoints / analysis */
@@ -224,6 +259,8 @@ export interface PracticeSessionVO {
   /** 创建时若已有 ONGOING 场次,这里是那个场次 id(已被置为 ABANDONED,可用于「继续上次」) */
   ongoingSessionId: number | null
   questions: PracticeQuestionVO[]
+  /** 模拟考试限时(分钟);普通练习为 null */
+  durationMin: number | null
 }
 
 export interface AnswerSubmitDTO {

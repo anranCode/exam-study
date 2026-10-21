@@ -186,6 +186,13 @@ onMounted(refresh)
         <AppIcon name="chevronRight" :size="16" />
       </button>
 
+      <!-- 次入口:按真题的题型结构限时模拟 -->
+      <button type="button" class="quick-action" @click="router.push('/mock')">
+        <AppIcon name="clock" :size="16" />
+        <span>模拟考试 · 按真题结构限时</span>
+        <AppIcon name="chevronRight" :size="16" />
+      </button>
+
       <!-- 分科目到期数量 -->
       <div class="card">
         <div class="card__head">

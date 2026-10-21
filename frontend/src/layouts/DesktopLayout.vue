@@ -12,6 +12,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: '今日', to: '/', icon: 'home' },
   { label: '自由练习', to: '/practice/custom', icon: 'target' },
+  { label: '模拟考试', to: '/mock', icon: 'clock' },
   { label: '题库', to: '/questions', icon: 'list' },
   { label: '错题', to: '/wrong', icon: 'bookmark' },
   { label: '统计', to: '/stats', icon: 'chart' },

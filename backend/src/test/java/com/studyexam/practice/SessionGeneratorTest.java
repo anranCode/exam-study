@@ -5,8 +5,10 @@ import com.studyexam.paper.Paper;
 import com.studyexam.paper.PaperQuestion;
 import com.studyexam.paper.PaperQuestionRepository;
 import com.studyexam.paper.PaperRepository;
+import com.studyexam.practice.dto.MockSectionDTO;
 import com.studyexam.question.Question;
 import com.studyexam.question.QuestionRepository;
+import com.studyexam.question.QuestionType;
 import com.studyexam.review.ReviewItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -183,6 +185,37 @@ class SessionGeneratorTest {
                 .containsExactly(11L, 12L);   // 顺序由试卷决定,不受查询返回顺序影响
         assertThat(picked.questions().get(0).sectionName()).isEqualTo("一、单项选择题");
         assertThat(picked.questions().get(1).sectionName()).isEqualTo("二、简答题");
+    }
+
+    @Test
+    @DisplayName("MOCK:按题型结构组卷,题量与顺序由 sections 决定")
+    void mockBySections() {
+        when(questionRepository.pickRandom(eq(1L), isNull(), eq(true),
+                eq(List.of("SINGLE_CHOICE")), anyList(), eq(2)))
+                .thenReturn(List.of(q(101), q(102)));
+        Question shortQ = q(201);
+        shortQ.setType("SHORT_ANSWER");
+        when(questionRepository.pickRandom(eq(1L), isNull(), eq(true),
+                eq(List.of("SHORT_ANSWER")), anyList(), eq(1)))
+                .thenReturn(List.of(shortQ));
+
+        SessionGenerator.Picked picked = generator.generate("MOCK", 1L, null, null, null, null, null,
+                List.of(new MockSectionDTO("SINGLE_CHOICE", 2),
+                        new MockSectionDTO("SHORT_ANSWER", 1)));
+
+        assertThat(picked.paperId()).isNull();
+        assertThat(picked.questions()).extracting(p -> p.question().getId())
+                .containsExactly(101L, 102L, 201L);
+        assertThat(picked.questions().get(2).sectionName())
+                .isEqualTo(QuestionType.find("SHORT_ANSWER").orElseThrow().getLabel());
+    }
+
+    @Test
+    @DisplayName("MOCK:既没给试卷也没给题型结构时报错")
+    void mockRequiresPaperOrSections() {
+        assertThatThrownBy(() -> generator.generate("MOCK", 1L, null, null, null, null, null, null))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("必须指定试卷");
     }
 
     @Test

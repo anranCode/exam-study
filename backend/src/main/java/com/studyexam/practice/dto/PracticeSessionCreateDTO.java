@@ -20,6 +20,10 @@ public record PracticeSessionCreateDTO(
                 + "「立即复习」某一道走这里)", example = "[36]") List<Long> questionIds,
         @Schema(description = "题型筛选:只抽这几种题型(如 [\"SINGLE_CHOICE\",\"MULTIPLE_CHOICE\"])。"
                 + "空表示不限。RANDOM / CHAPTER / REVIEW / WRONG 生效", example = "[\"SINGLE_CHOICE\"]")
-        List<String> types
+        List<String> types,
+        @Schema(description = "模拟考试的题型结构;MOCK 模式且没有 paperId 时用它组卷,"
+                + "如 [{\"type\":\"SINGLE_CHOICE\",\"count\":25},{\"type\":\"SHORT_ANSWER\",\"count\":5}]")
+        List<MockSectionDTO> sections,
+        @Schema(description = "模拟考试限时(分钟);为空时按 150 分钟", example = "150") Integer durationMin
 ) {
 }

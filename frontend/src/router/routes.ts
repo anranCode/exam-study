@@ -27,6 +27,13 @@ export const routes: RouteRecordRaw[] = [
     meta: { title: '自由练习', layout: 'auto' }
   },
   {
+    // 模拟考试:按真题的题型结构组卷,限时作答
+    path: '/mock',
+    name: 'mock-exam',
+    component: () => import('@/views/MockExamView.vue'),
+    meta: { title: '模拟考试', layout: 'auto' }
+  },
+  {
     path: '/practice/:mode',
     name: 'practice',
     component: () => import('@/views/PracticeView.vue'),

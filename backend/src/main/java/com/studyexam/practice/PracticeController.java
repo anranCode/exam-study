@@ -5,6 +5,7 @@ import com.studyexam.common.PageResult;
 import com.studyexam.common.Result;
 import com.studyexam.practice.dto.AnswerResultVO;
 import com.studyexam.practice.dto.AnswerSubmitDTO;
+import com.studyexam.practice.dto.MockTemplateVO;
 import com.studyexam.practice.dto.OngoingSessionVO;
 import com.studyexam.practice.dto.PracticeSessionCreateDTO;
 import com.studyexam.practice.dto.PracticeSessionDetailVO;
@@ -31,9 +32,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class PracticeController {
 
     private final PracticeService practiceService;
+    private final MockExamService mockExamService;
 
-    public PracticeController(PracticeService practiceService) {
+    public PracticeController(PracticeService practiceService, MockExamService mockExamService) {
         this.practiceService = practiceService;
+        this.mockExamService = mockExamService;
+    }
+
+    @GetMapping("/mock/template")
+    @Operation(summary = "模拟考试组卷模板",
+            description = "从该科目最近一份真题试卷读出题型结构(题型、题数、每题分值、时长),"
+                    + "并给出题库里每种题型已发布的可练习题数。没有真题可参考时 sections 为空。")
+    @ApiResultResponses
+    public Result<MockTemplateVO> mockTemplate(
+            @Parameter(description = "科目 ID") @RequestParam Long subjectId) {
+        return Result.ok(mockExamService.template(subjectId));
     }
 
     @PostMapping("/sessions")

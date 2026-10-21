@@ -10,9 +10,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 练习场次。一次刷题从创建到结束的记录。
@@ -36,6 +39,14 @@ public class PracticeSession {
 
     /** MOCK 模式时有值。 */
     private Long paperId;
+
+    /** 模拟考试的限时(分钟);普通练习为空。 */
+    private Integer durationMin;
+
+    /** 本场抽到的题目 ID(按出题顺序);用于交卷后按整卷统计。 */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "question_ids", columnDefinition = "json")
+    private List<Long> questionIds;
 
     /** DAILY / RANDOM / CHAPTER / MOCK / REVIEW */
     @Column(nullable = false, length = 16)

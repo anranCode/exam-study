@@ -7,6 +7,7 @@ import { http } from './request'
 import type {
   AnswerResultVO,
   AnswerSubmitDTO,
+  MockTemplateVO,
   OngoingSessionVO,
   PageResult,
   PracticeSessionCreateDTO,
@@ -19,8 +20,7 @@ import type {
 
 const BASE = '/v1/practice/sessions'
 
-/** POST /practice/sessions —— 开始一场练习 */
-export function createPracticeSession(body: PracticeSessionCreateDTO): Promise<PracticeSessionVO> {
+/** POST /practice/sessions —— 开始一场练习 */export function createPracticeSession(body: PracticeSessionCreateDTO): Promise<PracticeSessionVO> {
   return http.post<PracticeSessionVO>(BASE, body)
 }
 
@@ -68,4 +68,9 @@ export function getPracticeSessionDetail(id: number): Promise<PracticeSessionDet
 /** DELETE /practice/sessions/{id} —— 删除记录(需确认) */
 export function deletePracticeSession(id: number): Promise<null> {
   return http.delete<null>(`${BASE}/${id}`)
+}
+
+/** GET /practice/mock/template —— 模拟考试组卷模板(题型结构来自最近一份真题) */
+export function getMockTemplate(subjectId: number): Promise<MockTemplateVO> {
+  return http.get<MockTemplateVO>('/v1/practice/mock/template', { params: { subjectId } })
 }

@@ -14,6 +14,7 @@ public record PracticeSessionVO(
         @Schema(description = "本轮满分(各题分值之和)") BigDecimal totalScore,
         @Schema(description = "创建时已存在且被置为放弃的场次 ID,供前端提示继续上次;没有则为空")
         Long ongoingSessionId,
-        @Schema(description = "题目列表(不含答案)") List<PracticeQuestionVO> questions
+        @Schema(description = "题目列表(不含答案)") List<PracticeQuestionVO> questions,
+        @Schema(description = "模拟考试限时(分钟);普通练习为空") Integer durationMin
 ) {
 }

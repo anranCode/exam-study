@@ -55,7 +55,8 @@ function summaryFromDetail(d: PracticeSessionDetailVO): SessionSummaryVO {
     reviewCreated: 0,
     reviewUpdated: 0,
     wrongQuestions: answers
-      .filter((a) => a.isCorrect === false)
+      // 客观题答错 + 主观题没自评(含模拟考试里压根没作答的题)
+      .filter((a) => a.isCorrect === false || (a.isCorrect === null && a.selfScore == null))
       .map((a) => ({
         questionId: a.questionId,
         stem: a.stem,
@@ -92,6 +93,11 @@ function reviewWrong() {
 }
 
 function again() {
+  // 模拟考试的组卷参数只存在于上一次的地址里,再来一轮要从设置页重新选
+  if (modeLower.value === 'mock') {
+    router.push('/mock')
+    return
+  }
   router.push(`/practice/${modeLower.value}`)
 }
 
@@ -159,7 +165,14 @@ function stemPreview(stem: string): string {
               size="sm"
               class="wrong-item__tag"
             />
-            <span class="wrong-item__stem wrap-anywhere">{{ stemPreview(w.stem) }}</span>
+            <div class="wrong-item__body">
+              <span class="wrong-item__stem wrap-anywhere">{{ stemPreview(w.stem) }}</span>
+              <!-- 模拟考试作答过程中看不到答案,交卷后在这里给出客观题的正确选项 -->
+              <span v-if="w.correctAnswer" class="wrong-item__answer wrap-anywhere">
+                正确答案:<strong class="mono">{{ w.correctAnswer }}</strong>
+              </span>
+            </div>
+            <span v-if="!w.userAnswer" class="wrong-item__flag wrong-item__flag--todo">未作答</span>
             <span v-if="w.isReview" class="wrong-item__flag">复习</span>
           </li>
         </ul>
@@ -282,11 +295,22 @@ function stemPreview(stem: string): string {
   flex-shrink: 0;
 }
 
-.wrong-item__stem {
+.wrong-item__body {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wrong-item__stem {
   font-size: var(--font-size-body);
   color: var(--text-primary);
+}
+
+.wrong-item__answer {
+  font-size: var(--font-size-aux);
+  color: var(--color-success);
 }
 
 .wrong-item__flag {
@@ -296,6 +320,11 @@ function stemPreview(stem: string): string {
   background-color: var(--color-warning-light);
   color: var(--color-warning);
   font-size: var(--font-size-aux);
+}
+
+.wrong-item__flag--todo {
+  background-color: var(--bg-page);
+  color: var(--text-secondary);
 }
 
 .wrong-empty {

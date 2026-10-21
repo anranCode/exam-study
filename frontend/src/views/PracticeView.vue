@@ -55,6 +55,8 @@ const VALID_MODES: PracticeMode[] = ['daily', 'random', 'chapter', 'mock', 'revi
 const loading = ref(false)
 const startError = ref<string | null>(null)
 const noQuestions = ref(false)
+/** 交卷/超时只处理一次 */
+const handedIn = ref(false)
 let timer: ReturnType<typeof setInterval> | null = null
 /** 答对后自动翻页的定时器 */
 let autoNextTimer: ReturnType<typeof setTimeout> | null = null
@@ -63,6 +65,8 @@ let autoNextTimer: ReturnType<typeof setTimeout> | null = null
 const AUTO_NEXT_DELAY = 1200
 
 const modeParam = computed(() => String(route.params.mode ?? '').toLowerCase())
+/** 模拟考试:限时、组卷来自 /mock 页,作答过程中不显示对错 */
+const examMode = computed(() => modeParam.value === 'mock')
 const modeLabel = computed(() => PRACTICE_MODE_LABEL[modeParam.value as PracticeMode] ?? '练习')
 const nextLabel = computed(() => (store.isLastQuestion ? '查看本轮结果' : '下一题'))
 const progressValue = computed(() => store.currentIndex + (graded.value ? 1 : 0))
@@ -71,6 +75,19 @@ const progressValue = computed(() => store.currentIndex + (graded.value ? 1 : 0)
  * 没有板块标题的旧解析/手写解析会作为一个整段返回,不会丢内容。
  */
 const analysisSections = computed(() => splitAnalysis(record.value?.result.analysis))
+
+/** 模拟考试剩余秒数;普通练习为 null */
+const remainingSeconds = computed<number | null>(() => {
+  if (!examMode.value || store.durationMin == null) return null
+  return Math.max(0, store.durationMin * 60 - store.elapsedSeconds)
+})
+
+const timeText = computed(() => {
+  const s = remainingSeconds.value
+  if (s == null) return ''
+  const m = Math.floor(s / 60)
+  return `${m}:${String(s % 60).padStart(2, '0')}`
+})
 
 function numOrNull(value: unknown): number | null {
   if (value == null || value === '') return null
@@ -139,6 +156,21 @@ async function startNew(modeLower: PracticeMode) {
       if (count != null) options.count = count
     } else if (modeLower === 'mock') {
       options.paperId = paperId
+      // 按题型结构组卷时必须带上科目:抽题池就是「这个科目里对应题型的已发布题」
+      options.subjectId = subjectId
+      // 模拟测试(新入口):按题型结构组卷,如 sections=SINGLE_CHOICE:25,SHORT_ANSWER:5
+      const sections = String(route.query.sections ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s) => {
+          const [type, count] = s.split(':')
+          return { type: (type ?? '').trim(), count: Number(count) }
+        })
+        .filter((s) => s.type && Number.isFinite(s.count) && s.count > 0)
+      if (sections.length) options.sections = sections
+      const duration = numOrNull(route.query.duration)
+      if (duration != null) options.durationMin = duration
     }
     const vo = await store.startSession(modeLower, options)
     noQuestions.value = !vo.questions || vo.questions.length === 0
@@ -157,6 +189,15 @@ async function boot() {
     return
   }
   const modeLower = m as PracticeMode
+  // 直接访问 /practice/mock 而没有组卷参数时,回到模拟考试设置页
+  if (
+    modeLower === 'mock' &&
+    numOrNull(route.query.paperId) == null &&
+    route.query.sections == null
+  ) {
+    router.replace('/mock')
+    return
+  }
   startError.value = null
   noQuestions.value = false
 
@@ -173,6 +214,16 @@ async function boot() {
   const customWrong =
     modeLower === 'wrong' &&
     (route.query.types != null || route.query.subjectId != null || route.query.count != null)
+  // 从模拟考试设置页点「开始」会带 fresh=1:只有这时才开新场;
+  // 刷新练习页没有 fresh,交给下面的「继续上次」逻辑恢复,别把答题进度冲掉。
+  if (modeLower === 'mock' && route.query.fresh === '1') {
+    store.reset()
+    const query = { ...route.query }
+    delete query.fresh
+    void router.replace({ path: route.path, query })
+    await startNew(modeLower)
+    return
+  }
   if (numOrNull(route.query.questionId) != null || customRandom || customReview || customWrong) {
     store.reset()
     await startNew(modeLower)
@@ -245,11 +296,50 @@ function clearAutoNext() {
  */
 watch(autoNextPending, (pending) => {
   clearAutoNext()
-  if (!pending) return
+  // 模拟考试不自动翻页:交卷前保持节奏,也让每题的选择停在自己的位置
+  if (!pending || examMode.value) return
   autoNextTimer = setTimeout(() => {
     autoNextTimer = null
     void onNext()
   }, AUTO_NEXT_DELAY)
+})
+
+/** 交卷 / 超时:直接结束本场并进入小结 */
+async function finishNow() {
+  if (store.sessionId == null) return
+  try {
+    const summary = await store.finishSession()
+    await router.push({
+      name: 'practice-result',
+      params: { mode: modeParam.value, sessionId: String(summary.sessionId) }
+    })
+  } catch {
+    // 请求层已统一提示;停在当前页,用户可再点一次
+  }
+}
+
+async function handIn() {
+  if (store.sessionId == null) return
+  try {
+    await ElMessageBox.confirm(
+      `已答 ${store.answeredCount} / ${store.total} 题,交卷后不能修改。`,
+      '确认交卷?',
+      { confirmButtonText: '交卷', cancelButtonText: '继续答题', type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  handedIn.value = true
+  await finishNow()
+}
+
+// 倒计时归零自动交卷(只触发一次)
+watch(remainingSeconds, (seconds) => {
+  if (examMode.value && seconds === 0 && !handedIn.value) {
+    handedIn.value = true
+    ElMessage.warning('考试时间到,已自动交卷')
+    void finishNow()
+  }
 })
 
 /** 输入框回车直接提交(填空类) */
@@ -314,6 +404,24 @@ onUnmounted(() => {
       />
     </header>
 
+    <!-- 模拟考试:倒计时 + 交卷 -->
+    <div v-if="examMode && store.sessionId != null" class="practice__exam">
+      <span
+        class="practice__timer mono"
+        :class="{ 'practice__timer--low': remainingSeconds != null && remainingSeconds <= 300 }"
+      >
+        剩余 {{ timeText || '—' }}
+      </span>
+      <button
+        type="button"
+        class="practice__handin tap-target"
+        :disabled="handedIn"
+        @click="handIn"
+      >
+        交卷
+      </button>
+    </div>
+
     <!-- 准备中 -->
     <div v-if="loading" class="practice__loading">
       <el-skeleton :rows="6" animated />
@@ -345,6 +453,7 @@ onUnmounted(() => {
           :question="question"
           :selected-keys="selectedKeys"
           :record="record"
+          :reveal="!examMode"
           @select="select"
           @submit="onSubmitFill"
         />
@@ -434,9 +543,9 @@ onUnmounted(() => {
           <button v-else type="button" class="btn btn--primary btn--block" @click="onNext">
             {{ nextLabel }}
           </button>
-          <!-- 主观题也能直接认输:按 0 分自评并展开参考答案,同时记入错题本 -->
+          <!-- 主观题也能直接认输:按 0 分自评并展开参考答案,同时记入错题本;模拟考试不给这个入口 -->
           <button
-            v-if="!graded"
+            v-if="!graded && !examMode"
             type="button"
             class="btn btn--ghost"
             :disabled="submitting"
@@ -449,6 +558,7 @@ onUnmounted(() => {
         <template v-else>
           <template v-if="!graded">
             <button
+              v-if="!examMode"
               type="button"
               class="btn btn--ghost"
               :disabled="submitting"
@@ -466,7 +576,13 @@ onUnmounted(() => {
             >
               提交答案
             </button>
-            <p v-else class="practice__tip">点选项立即判定,答对自动进入下一题</p>
+            <p v-else class="practice__tip">
+              {{
+                examMode
+                  ? '模拟考试中不显示对错,交卷后统一看结果'
+                  : '点选项立即判定,答对自动进入下一题'
+              }}
+            </p>
           </template>
           <button v-else type="button" class="btn btn--primary btn--block" @click="onNext">
             {{ nextLabel }}
@@ -529,6 +645,43 @@ onUnmounted(() => {
 
 .practice__progress {
   flex-basis: 100%;
+}
+
+/* 模拟考试:倒计时与交卷 */
+.practice__exam {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+}
+
+.practice__timer {
+  font-size: var(--font-size-card-title);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.practice__timer--low {
+  color: var(--color-danger);
+}
+
+.practice__handin {
+  min-height: var(--tap-target-min);
+  padding: 0 var(--space-lg);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  background-color: transparent;
+  color: var(--color-primary);
+  font-size: var(--font-size-body);
+}
+
+.practice__handin:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .practice__loading {
@@ -611,6 +764,33 @@ onUnmounted(() => {
   min-height: var(--tap-target-min);
   display: flex;
   align-items: center;
+}
+
+/*
+ * 要点自评用的是 Element Plus 的 el-checkbox,它默认 white-space: nowrap,
+ * 长要点会撑成两千多像素宽,再被 body 的 overflow-x: hidden 裁掉 ——
+ * 表现出来就是「简答题的答案要点显示不全」,手机和电脑都一样。
+ * 这里让复选框整体可换行,并让勾选框对齐第一行文字。
+ */
+.point :deep(.el-checkbox) {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  margin-right: 0;
+  align-items: flex-start;
+  white-space: normal;
+}
+
+.point :deep(.el-checkbox__label) {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: var(--line-height-body);
+}
+
+.point :deep(.el-checkbox__input) {
+  margin-top: 3px;
 }
 
 .point__text {
