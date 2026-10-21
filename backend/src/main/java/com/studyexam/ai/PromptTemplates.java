@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 四种 AI 场景的 Prompt 模板。
+ * AI 场景的 Prompt 模板。
  *
- * <p>集中在这里,不在 Service 里拼字符串——既方便快照测试,也避免同一套人设在四个地方写歪。
+ * <p>集中在这里,不在 Service 里拼字符串——既方便快照测试,也避免同一套人设在多个地方写歪。
  *
  * <p>人设与硬约束(来源:docs/software 需求总结 3.6 与 docs/study-exam/backend/01-architecture.md):
  * 你是自考冲刺辅导老师,学员目标是 60 分及格。讲解必须——
@@ -71,7 +71,36 @@ public final class PromptTemplates {
         return sb.toString();
     }
 
-    /** 场景二:举一反三,生成同考点变式题。不入库,由前端确认后再保存。 */
+    /** 场景二:根据参考答案要点生成主观题解析(写入 question.analysis)。 */
+    public static final String ANALYSIS_ROLE = """
+            你是「自考冲刺辅导老师」,学员是在职备考的成年人,目标是 60 分及格。
+            现在要根据一道主观题的「参考答案要点」写一段简洁好记、可以直接背的解析,要求:
+            1. 第一行一句话点明考点(如「考点:实践与认识的辩证关系」)。
+            2. 中间用 ①②③ 分条列出采分点,每条不超过 30 字,写成考场上能直接写的话。
+            3. 最后一行给一句好记的口诀或关键词串联。
+            4. 全文 120—220 字,大白话,不引用教材原文,不写「建议你」「你可以」这类废话。
+            5. 只输出解析正文,不要标题、不要 Markdown 标记、不要代码块。
+            """;
+
+    /** 主观题解析:把要点改写成简洁、好记、能直接背的答案。 */
+    public static String analysis(QuestionType type, String stem, List<String> points) {
+        String pointLines = points == null ? "" : points.stream()
+                .filter(p -> p != null && !p.isBlank())
+                .map(p -> "  - " + p.trim())
+                .collect(Collectors.joining("\n"));
+        return """
+                请为下面这道自考主观题写一段解析。
+
+                【题型】%s
+                【题干】%s
+                【参考答案要点】
+                %s
+
+                请按人设要求输出,120—220 字;上面每一条要点都必须在解析里覆盖到。
+                """.formatted(type.getLabel(), truncate(stem, 800), pointLines);
+    }
+
+    /** 场景三:举一反三,生成同考点变式题。不入库,由前端确认后再保存。 */
     public static String variant(Question q) {
         String optionKeys = q.getOptions() == null ? "A/B/C/D" :
                 q.getOptions().stream().map(OptionItem::key).collect(Collectors.joining("/"));
@@ -106,7 +135,7 @@ public final class PromptTemplates {
                 optionKeys);
     }
 
-    /** 场景三:记忆口诀。针对易混知识点,可复制保存。 */
+    /** 场景四:记忆口诀。针对易混知识点,可复制保存。 */
     public static String mnemonic(String knowledgePoint) {
         return """
                 考点/知识点:%s
@@ -120,7 +149,7 @@ public final class PromptTemplates {
                 """.formatted(knowledgePoint == null ? "(未指定)" : knowledgePoint.trim());
     }
 
-    /** 场景四:考前串讲清单。按科目汇总高频考点,每科一份,可覆盖重生成。 */
+    /** 场景五:考前串讲清单。按科目汇总高频考点,每科一份,可覆盖重生成。 */
     public static String digest(String subjectName, List<String> chapterNames, List<String> sampleStems) {
         String chapters = chapterNames == null || chapterNames.isEmpty()
                 ? "(该科目尚未录入章节)"

@@ -122,7 +122,7 @@ public void dispatchReminders() { ... }
 
 ### 通义千问实现「AI 老师」
 
-AI 能力通过 DashScope 的 OpenAI 兼容接口调用(`https://dashscope.aliyuncs.com/compatible-mode/v1`),用 Spring 的 `RestClient` 发 POST 即可,不引入重型 SDK。System Prompt 固定为「自考冲刺辅导老师」人设(详见 `study-exam/backend/01-architecture.md` 第五节),讲解输出限制在 120 字以内。API Key 存服务端环境变量,任何接口不返回。四种场景(精简解析 / 变式题 / 记忆口诀 / 考前串讲)与接口约定见 `study-exam/backend/03-api-spec.md` 第八节。
+AI 能力通过 DashScope 的 Anthropic 兼容接口调用(`https://token-plan.cn-beijing.maas.aliyuncs.com/apps/anthropic`),用 Spring 的 `RestClient` 发 POST 即可,不引入重型 SDK。System Prompt 固定为「自考冲刺辅导老师」人设(详见 `study-exam/backend/01-architecture.md` 第五节),讲解输出限制在 120 字以内。API Key 存服务端环境变量,任何接口不返回。五种场景(精简解析 / 主观题解析生成 / 变式题 / 记忆口诀 / 考前串讲)与接口约定见 `study-exam/backend/03-api-spec.md` 第八节。
 
 ---
 

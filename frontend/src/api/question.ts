@@ -6,6 +6,8 @@
 import { http } from './request'
 import instance from './request'
 import type {
+  AiAnalysisRequest,
+  AiAnalysisVO,
   ImportResult,
   PageResult,
   QuestionDetailVO,
@@ -16,6 +18,9 @@ import type {
 } from './types'
 
 const BASE = '/v1/questions'
+
+/** 生成解析要等模型返回,20—30 秒很常见,不能走 15 秒的默认超时 */
+const AI_TIMEOUT = 120_000
 
 /** GET /questions —— 题目分页列表,全部筛选参数可选 */
 export function getQuestions(query: QuestionQuery = {}): Promise<PageResult<QuestionDetailVO>> {
@@ -67,4 +72,19 @@ export function getTypeCounts(subjectId?: number): Promise<TypeCountVO[]> {
   const params: Record<string, unknown> = {}
   if (subjectId != null) params.subjectId = subjectId
   return http.get<TypeCountVO[]>(`${BASE}/type-counts`, { params })
+}
+
+/** POST /questions/batch-publish —— 批量入库,返回实际变更的题数 */
+export function publishQuestions(ids: number[]): Promise<number> {
+  return http.post<number>(`${BASE}/batch-publish`, { ids })
+}
+
+/** POST /questions/ai-analysis/preview —— 按表单里的题型/题干/要点生成解析,不写库 */
+export function previewQuestionAnalysis(body: AiAnalysisRequest): Promise<AiAnalysisVO> {
+  return http.post<AiAnalysisVO>(`${BASE}/ai-analysis/preview`, body, { timeout: AI_TIMEOUT })
+}
+
+/** POST /questions/{id}/ai-analysis —— 按题目的参考答案要点生成解析并保存到 analysis */
+export function generateQuestionAnalysis(id: number): Promise<AiAnalysisVO> {
+  return http.post<AiAnalysisVO>(`${BASE}/${id}/ai-analysis`, undefined, { timeout: AI_TIMEOUT })
 }

@@ -2,13 +2,20 @@ package com.studyexam.setting;
 
 import com.studyexam.common.BusinessException;
 import com.studyexam.common.ErrorCode;
+import com.studyexam.question.QuestionType;
+import com.studyexam.setting.dto.PracticeDefaultsUpsertDTO;
+import com.studyexam.setting.dto.PracticeDefaultsVO;
 import com.studyexam.setting.dto.SettingUpsertDTO;
 import com.studyexam.setting.dto.SettingVO;
+import com.studyexam.subject.SubjectRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -26,11 +33,16 @@ public class SettingService {
     private static final int MASK_TAIL = 6;
     private static final Set<String> CHANNELS = Set.of("WECOM", "SERVERCHAN");
     private static final Set<String> DARK_MODES = Set.of("AUTO", "LIGHT", "DARK");
+    private static final Set<String> PRACTICE_SOURCES = Set.of("LIBRARY", "WRONG");
+    /** 自由练习单场题量上限,与 SessionGenerator / 前端题量选择器一致。 */
+    private static final int MAX_PRACTICE_COUNT = 100;
 
     private final UserSettingRepository repository;
+    private final SubjectRepository subjectRepository;
 
-    public SettingService(UserSettingRepository repository) {
+    public SettingService(UserSettingRepository repository, SubjectRepository subjectRepository) {
         this.repository = repository;
+        this.subjectRepository = subjectRepository;
     }
 
     /** 当前设置;表里没有(理论上 V5 会插入)时按默认值建一行。 */
@@ -83,12 +95,91 @@ public class SettingService {
             }
             s.setDarkMode(mode);
         }
+        if (dto.practiceDefaults() != null) {
+            applyPracticeDefaults(s, dto.practiceDefaults());
+        }
 
         UserSetting saved = repository.save(s);
-        log.info("设置已更新 channel={} reminder={} {} evening={} {}",
+        log.info("设置已更新 channel={} reminder={} {} evening={} {} source={}",
                 saved.getNotifyChannel(), saved.getReminderEnabled(), saved.getReminderTime(),
-                saved.getEveningReminderEnabled(), saved.getEveningReminderTime());
+                saved.getEveningReminderEnabled(), saved.getEveningReminderTime(),
+                saved.getPracticeSource());
         return toVO(saved);
+    }
+
+    /**
+     * 应用自由练习默认条件。
+     *
+     * <p>{@code subjectId} / {@code types} 传 null 表示清空(全部科目 / 全部题型);
+     * {@code source} 与两个 {@code count} 传 null 表示沿用原值。
+     */
+    private void applyPracticeDefaults(UserSetting s, PracticeDefaultsUpsertDTO d) {
+        if (d.source() != null) {
+            s.setPracticeSource(requirePracticeSource(d.source()));
+        }
+        s.setLibrarySubjectId(requireSubject(d.librarySubjectId(), "librarySubjectId"));
+        s.setLibraryTypes(joinTypes(d.libraryTypes()));
+        if (d.libraryCount() != null) {
+            s.setLibraryCount(requirePracticeCount("libraryCount", d.libraryCount()));
+        }
+        s.setWrongSubjectId(requireSubject(d.wrongSubjectId(), "wrongSubjectId"));
+        s.setWrongTypes(joinTypes(d.wrongTypes()));
+        if (d.wrongCount() != null) {
+            s.setWrongCount(requirePracticeCount("wrongCount", d.wrongCount()));
+        }
+    }
+
+    private String requirePracticeSource(String raw) {
+        String v = raw.trim().toUpperCase(Locale.ROOT);
+        if (!PRACTICE_SOURCES.contains(v)) {
+            throw BusinessException.of(ErrorCode.PARAM_INVALID, "practiceDefaults.source: 只能是 LIBRARY 或 WRONG");
+        }
+        return v;
+    }
+
+    private int requirePracticeCount(String field, int count) {
+        if (count < 1 || count > MAX_PRACTICE_COUNT) {
+            throw BusinessException.of(ErrorCode.PARAM_INVALID, field + ": 取值 1—" + MAX_PRACTICE_COUNT);
+        }
+        return count;
+    }
+
+    private Long requireSubject(Long id, String field) {
+        if (id == null) {
+            return null;
+        }
+        if (!subjectRepository.existsById(id)) {
+            throw BusinessException.of(ErrorCode.SUBJECT_NOT_FOUND, field + ": 科目不存在:id=" + id);
+        }
+        return id;
+    }
+
+    /** 题型规范化为大写、去重后按逗号拼接;空列表落库为 null(表示全部)。 */
+    private String joinTypes(List<String> types) {
+        if (types == null || types.isEmpty()) {
+            return null;
+        }
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
+        for (String raw : types) {
+            if (raw == null || raw.isBlank()) {
+                continue;
+            }
+            String t = raw.trim().toUpperCase(Locale.ROOT);
+            QuestionType.find(t).orElseThrow(() -> BusinessException.of(ErrorCode.PARAM_INVALID,
+                    "未知题型:\"" + raw + "\""));
+            normalized.add(t);
+        }
+        return normalized.isEmpty() ? null : String.join(",", normalized);
+    }
+
+    private List<String> splitTypes(String csv) {
+        if (csv == null || csv.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(csv.split(","))
+                .map(String::trim)
+                .filter(t -> !t.isEmpty())
+                .toList();
     }
 
     /** 密钥掩码:{@code …} + 末 6 位;空值返回 null。 */
@@ -134,6 +225,14 @@ public class SettingService {
                 s.getReminderTime(),
                 Boolean.TRUE.equals(s.getEveningReminderEnabled()),
                 s.getEveningReminderTime(),
-                s.getDarkMode());
+                s.getDarkMode(),
+                new PracticeDefaultsVO(
+                        s.getPracticeSource(),
+                        s.getLibrarySubjectId(),
+                        splitTypes(s.getLibraryTypes()),
+                        s.getLibraryCount() == null ? 10 : s.getLibraryCount(),
+                        s.getWrongSubjectId(),
+                        splitTypes(s.getWrongTypes()),
+                        s.getWrongCount() == null ? 10 : s.getWrongCount()));
     }
 }

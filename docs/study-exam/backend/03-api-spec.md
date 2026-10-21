@@ -101,7 +101,31 @@ GET /questions?subjectId=1&chapterId=3&type=SINGLE_CHOICE&keyword=矛盾&sourceY
 | POST | `/questions` | 新建题目 |
 | PUT | `/questions/{id}` | 修改题目 |
 | DELETE | `/questions/{id}` | 删除(级联清理答题记录与复习队列) |
+| POST | `/questions/batch-publish` | 批量入库:把选中的待校对题改为 PUBLISHED |
+| POST | `/questions/ai-analysis/preview` | 按题型 / 题干 / 参考答案要点生成解析(不写库,编辑页用) |
+| POST | `/questions/{id}/ai-analysis` | 生成解析并写入该题的 `analysis`(题库批量用) |
 | GET | `/questions/random?subjectId=&count=` | 随机取题(仅调试用) |
+
+**批量入库 / AI 生成解析**:
+
+```
+POST /questions/batch-publish
+body: { "ids": [101, 102] }          // 单次最多 200;已是 PUBLISHED 的跳过
+→ 3                                  // 返回实际变更的题数
+```
+
+```
+POST /questions/ai-analysis/preview
+body: {
+  "type": "SHORT_ANSWER",
+  "stem": "简述实践与认识的辩证关系",
+  "answerPoints": ["实践是认识的基础", "认识反作用于实践"]
+}
+→ { "analysis": "考点:…… ①…… ②…… 口诀:……" }
+```
+
+条件:必须是主观题、必须有参考答案要点。走系统已配置的 AI(见第八节);
+`POST /questions/{id}/ai-analysis` 无请求体,生成后直接写回 `question.analysis`。
 
 **POST `/questions` 请求体**:
 
@@ -394,9 +418,22 @@ POST /practice/sessions/{sessionId}/finish
   "reminderTime": "07:00",
   "eveningReminderEnabled": true,
   "eveningReminderTime": "21:30",
-  "darkMode": "AUTO"
+  "darkMode": "AUTO",
+  "practiceDefaults": {
+    "source": "LIBRARY",
+    "librarySubjectId": 1,
+    "libraryTypes": ["SINGLE_CHOICE"],
+    "libraryCount": 10,
+    "wrongSubjectId": null,
+    "wrongTypes": [],
+    "wrongCount": 10
+  }
 }
 ```
+
+`practiceDefaults` 是自由练习的默认条件:进入自由练习时自动带入题源、科目、题型、题量。
+整体传 `null` 表示不改;对象里 `librarySubjectId` / `wrongSubjectId` 为 `null` 表示全部科目,
+`libraryTypes` / `wrongTypes` 为空数组表示全部题型。`source` 取值 `LIBRARY` / `WRONG`。
 
 `notifyChannel` 取值:`WECOM`(企业微信群机器人)/ `SERVERCHAN`(Server酱)。
 
@@ -408,12 +445,18 @@ POST /practice/sessions/{sessionId}/finish
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
+| POST | `/questions/ai-analysis/preview` | 按表单里的题型 / 题干 / 要点生成主观题解析(不写库) |
+| POST | `/questions/{id}/ai-analysis` | 生成解析并写入 `question.analysis` |
 | POST | `/ai/explain` | 生成 / 获取某题的 AI 精简解析 |
 | POST | `/ai/variant` | 针对某题生成一道同考点变式题 |
 | POST | `/ai/mnemonic` | 针对知识点生成记忆口诀 |
 | POST | `/ai/digest` | 生成 / 覆盖某科目的考前串讲清单 |
 | GET | `/ai/digest?subjectId=1` | 读取已生成的串讲清单 |
 | GET | `/ai/usage?days=30` | AI 用量统计(token 消耗,核算 TokenPlan) |
+
+**主观题解析生成**走 `ANALYSIS` 场景:只接受主观题 + 非空参考答案要点,
+Prompt 要求输出「考点 + ①②③ 采分点 + 口诀」,全文 120—220 字、口语化、好记;
+调用沿用系统已配置的 AI(`DASHSCOPE_API_KEY`),失败返回 6001。
 
 **`POST /ai/explain` 请求体**:
 
@@ -446,7 +489,7 @@ POST /practice/sessions/{sessionId}/finish
 硬性约定:
 
 1. **缓存优先**:已生成且 `force != true` 时直接返回库中内容,不调用大模型。
-2. **超时与降级**:模型调用超时 15 秒;失败返回 `code = 6001`(AI 服务暂不可用)与可读原因,前端降级显示原解析并提供「重试」。
+2. **超时与降级**:文本模型调用超时 45 秒;失败返回 `code = 6001`(AI 服务暂不可用)与可读原因,前端降级显示原解析并提供「重试」。
 3. **写日志**:每次真实调用(无论成败)写 `ai_call_log`,记录 token 用量与耗时。
 4. **密钥不下发**:通义千问 API Key 只存服务端配置,任何接口都不返回。
 

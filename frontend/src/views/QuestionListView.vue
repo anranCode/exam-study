@@ -7,13 +7,19 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { deleteQuestion, getQuestions } from '@/api/question'
+import {
+  deleteQuestion,
+  generateQuestionAnalysis,
+  getQuestions,
+  publishQuestions
+} from '@/api/question'
 import type { QuestionDetailVO, QuestionQuery } from '@/api/types'
 import { useSubjectStore } from '@/stores/subject'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import {
   QUESTION_TYPE_LABEL,
-  QUESTION_TYPE_OPTIONS
+  QUESTION_TYPE_OPTIONS,
+  isObjective
 } from '@/utils/constants'
 import SubjectTag from '@/components/SubjectTag.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -43,6 +49,106 @@ const total = ref(0)
 const loading = ref(false)
 const page = ref(1)
 const size = ref(20)
+
+/* ---------------- 批量操作:入库 / AI 生成解析 ---------------- */
+
+const tableRef = ref<{ clearSelection: () => void } | null>(null)
+const selectedRows = ref<QuestionDetailVO[]>([])
+const batchBusy = ref(false)
+const batchProgress = ref('')
+/** 一次最多让 AI 生成多少道:防止误选一整页把额度烧光,也避免请求挂太久 */
+const MAX_AI_BATCH = 20
+
+/** 选中的题里还能入库的(待校对) */
+const draftSelected = computed(() => selectedRows.value.filter((r) => r.status === 'DRAFT'))
+/** 选中的题里适合 AI 生成解析的:主观题 + 有参考答案要点 + 还没有解析 */
+const analysisCandidates = computed(() =>
+  selectedRows.value.filter(
+    (r) => !isObjective(r.type) && (r.answerPoints?.length ?? 0) > 0 && !r.analysis?.trim()
+  )
+)
+
+function onSelectionChange(rows: QuestionDetailVO[]) {
+  selectedRows.value = rows
+}
+
+function clearSelection() {
+  tableRef.value?.clearSelection()
+  selectedRows.value = []
+}
+
+/** 批量入库:只把待校对题改成已入库 */
+async function batchPublish() {
+  const ids = draftSelected.value.map((r) => r.id)
+  if (ids.length === 0) return
+  try {
+    await ElMessageBox.confirm(
+      `把选中的 ${ids.length} 道「待校对」题改为「已入库」?入库后它们会进入练习抽题池。`,
+      '批量入库',
+      { confirmButtonText: '入库', cancelButtonText: '取消', type: 'info' }
+    )
+  } catch {
+    return
+  }
+  batchBusy.value = true
+  try {
+    const changed = await publishQuestions(ids)
+    ElMessage.success(changed > 0 ? `已入库 ${changed} 题` : '选中的题都已是已入库状态')
+    clearSelection()
+    await load()
+  } catch {
+    // 错误提示已由 request.ts 统一弹出
+  } finally {
+    batchBusy.value = false
+  }
+}
+
+/**
+ * 批量 AI 生成解析:逐题串行调用后端(每次一个 AI 请求),任何一题失败就停止,
+ * 避免 AI 未配置 / 额度用尽时连续弹十几次错误。
+ */
+async function batchGenerateAnalysis() {
+  const candidates = analysisCandidates.value
+  if (candidates.length === 0) return
+  if (candidates.length > MAX_AI_BATCH) {
+    ElMessage.warning(`一次最多生成 ${MAX_AI_BATCH} 道,请减少勾选后再试`)
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `为选中的 ${candidates.length} 道主观题调用 AI 生成解析?只处理还没有解析的题,生成后会直接保存(每道约 10—30 秒)。`,
+      'AI 生成解析',
+      { confirmButtonText: '开始生成', cancelButtonText: '取消', type: 'info' }
+    )
+  } catch {
+    return
+  }
+  batchBusy.value = true
+  let done = 0
+  let failed = 0
+  try {
+    for (let i = 0; i < candidates.length; i++) {
+      batchProgress.value = `生成中 ${i + 1}/${candidates.length}…`
+      try {
+        await generateQuestionAnalysis(candidates[i].id)
+        done++
+      } catch {
+        failed++
+        break
+      }
+    }
+    if (done > 0) {
+      ElMessage.success(`已生成 ${done} 道题的解析${failed ? ',其余已停止' : ''}`)
+    }
+    clearSelection()
+    await load()
+  } catch {
+    // 错误提示已由 request.ts 统一弹出
+  } finally {
+    batchBusy.value = false
+    batchProgress.value = ''
+  }
+}
 
 const filters = reactive<{
   subjectId: number | null
@@ -421,7 +527,32 @@ watch(
       </div>
 
       <div v-else class="card question-list__table">
-        <el-table :data="rows" style="width: 100%">
+        <div v-if="selectedRows.length > 0" class="batch-bar">
+          <span class="batch-bar__count">已选 {{ selectedRows.length }} 题</span>
+          <el-button
+            type="primary"
+            :disabled="draftSelected.length === 0 || batchBusy"
+            @click="batchPublish"
+          >
+            批量入库<template v-if="draftSelected.length">({{ draftSelected.length }})</template>
+          </el-button>
+          <el-button
+            :disabled="analysisCandidates.length === 0 || batchBusy"
+            @click="batchGenerateAnalysis"
+          >
+            AI 生成解析<template v-if="analysisCandidates.length">({{ analysisCandidates.length }})</template>
+          </el-button>
+          <span v-if="batchBusy" class="batch-bar__progress">{{ batchProgress }}</span>
+          <el-button text :disabled="batchBusy" @click="clearSelection">取消选择</el-button>
+        </div>
+        <el-table
+          ref="tableRef"
+          :data="rows"
+          row-key="id"
+          style="width: 100%"
+          @selection-change="onSelectionChange"
+        >
+          <el-table-column type="selection" width="44" />
           <el-table-column prop="id" label="#" width="64" />
           <el-table-column label="题干" min-width="280">
             <template #default="{ row }">
@@ -517,6 +648,28 @@ watch(
 .question-list__skeleton,
 .question-list__table {
   padding: var(--space-md);
+}
+
+.batch-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-light);
+}
+
+.batch-bar__count {
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+}
+
+.batch-bar__progress {
+  font-size: var(--font-size-aux);
+  color: var(--text-secondary);
 }
 
 /* ── 手机 / 平板:卡片列表(桌面端不渲染这块) ── */

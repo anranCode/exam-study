@@ -420,6 +420,17 @@ export interface QuestionQuery {
   sort?: string
 }
 
+/** AI 生成的解析(预览或已保存) */
+export interface AiAnalysisVO {
+  analysis: string
+}
+
+export interface AiAnalysisRequest {
+  type: string
+  stem: string
+  answerPoints: string[]
+}
+
 /* ---------------- 批量导入(阶段 3) ---------------- */
 
 export interface ImportItemDTO {
@@ -563,6 +574,21 @@ export interface TypeCountVO {
 
 export type NotifyChannel = 'WECOM' | 'SERVERCHAN'
 
+/** 自由练习默认题源:题库 / 错题 */
+export type PracticeSource = 'LIBRARY' | 'WRONG'
+
+/** 自由练习的默认条件:两个题源各存一份科目 / 题型 / 题量 */
+export interface PracticeDefaultsVO {
+  source: PracticeSource
+  librarySubjectId: number | null
+  /** 空数组 = 全部题型 */
+  libraryTypes: string[]
+  libraryCount: number
+  wrongSubjectId: number | null
+  wrongTypes: string[]
+  wrongCount: number
+}
+
 /** GET /settings —— 密钥类字段只返回掩码 */
 export interface SettingVO {
   dailyQuestionCount: number
@@ -579,6 +605,7 @@ export interface SettingVO {
   /** HH:mm */
   eveningReminderTime: string
   darkMode: 'AUTO' | 'LIGHT' | 'DARK'
+  practiceDefaults: PracticeDefaultsVO
 }
 
 /** PUT /settings —— 只传要改的字段;密钥传回掩码表示不改,传空串表示清空 */
@@ -592,6 +619,16 @@ export interface SettingUpsertDTO {
   eveningReminderEnabled?: boolean
   eveningReminderTime?: string
   darkMode?: 'AUTO' | 'LIGHT' | 'DARK'
+  /** 整体提交;subjectId 传 null / types 传空表示「全部」 */
+  practiceDefaults?: {
+    source?: PracticeSource
+    librarySubjectId: number | null
+    libraryTypes: string[]
+    libraryCount?: number
+    wrongSubjectId: number | null
+    wrongTypes: string[]
+    wrongCount?: number
+  }
 }
 
 /** POST /notify/test —— 失败也返回 200,message 就是失败原因 */

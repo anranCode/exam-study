@@ -6,8 +6,13 @@
  */
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { createQuestion, getQuestion, updateQuestion } from '@/api/question'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import {
+  createQuestion,
+  getQuestion,
+  previewQuestionAnalysis,
+  updateQuestion
+} from '@/api/question'
 import { useSubjectStore } from '@/stores/subject'
 import {
   QUESTION_TYPE_LABEL,
@@ -87,6 +92,16 @@ const editableOptions = computed(
 )
 const isMulti = computed(() => form.type === 'MULTIPLE_CHOICE')
 const isReadingJudge = computed(() => form.type === 'READING_JUDGE')
+
+/** 只有「主观题 + 有参考答案要点 + 有题干」才允许 AI 生成解析 */
+const canGenerateAnalysis = computed(
+  () =>
+    form.type !== '' &&
+    !objective.value &&
+    form.stem.trim().length > 0 &&
+    form.answerPoints.some((p) => p.trim().length > 0)
+)
+const generatingAnalysis = ref(false)
 
 const chapterOptions = computed(() =>
   form.subjectId == null ? [] : (subjectStore.chaptersBySubject[form.subjectId] ?? [])
@@ -329,6 +344,39 @@ function buildPayload(): QuestionUpsertDTO {
 }
 
 /**
+ * 让 AI 按参考答案要点写一段简洁好记的解析,填进表单(保存时才落库)。
+ * 新建的题还没有 ID,所以走「预览」接口而不是按 ID 保存。
+ */
+async function generateAnalysis() {
+  if (!canGenerateAnalysis.value || generatingAnalysis.value) return
+  if (form.analysis.trim()) {
+    try {
+      await ElMessageBox.confirm('解析里已有内容,AI 生成会覆盖它。继续?', 'AI 生成解析', {
+        confirmButtonText: '覆盖生成',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+    } catch {
+      return
+    }
+  }
+  generatingAnalysis.value = true
+  try {
+    const result = await previewQuestionAnalysis({
+      type: form.type,
+      stem: form.stem.trim(),
+      answerPoints: form.answerPoints.map((p) => p.trim()).filter(Boolean)
+    })
+    form.analysis = result.analysis
+    ElMessage.success('已生成,保存后生效')
+  } catch {
+    // 错误提示已由 request.ts 统一弹出
+  } finally {
+    generatingAnalysis.value = false
+  }
+}
+
+/**
  * 从题库列表点「编辑」进来时会带 back(列表当时的地址,含筛选条件),
  * 保存/取消都回那一屏 —— 否则库里一筛、进来改一道、返回就回到「全部」了。
  */
@@ -530,8 +578,23 @@ onMounted(async () => {
           </div>
         </el-form-item>
 
-        <!-- 解析 -->
-        <el-form-item label="解析(可选)">
+        <!-- 解析:主观题可以让 AI 按参考答案要点生成 -->
+        <el-form-item>
+          <template #label>
+            <span class="analysis-label">
+              解析(可选)
+              <el-button
+                v-if="canGenerateAnalysis"
+                link
+                type="primary"
+                size="small"
+                :loading="generatingAnalysis"
+                @click="generateAnalysis"
+              >
+                <AppIcon name="sparkles" :size="14" /> AI 生成
+              </el-button>
+            </span>
+          </template>
           <el-input
             v-model="form.analysis"
             type="textarea"
@@ -539,6 +602,9 @@ onMounted(async () => {
             resize="vertical"
             placeholder="解析内容"
           />
+          <p v-if="canGenerateAnalysis" class="analysis-hint">
+            按参考答案要点生成简洁好记的解析,生成后仍可手动修改。
+          </p>
         </el-form-item>
 
         <!-- 难度 / 分值 / 年份 / 状态 -->
@@ -696,5 +762,18 @@ onMounted(async () => {
   gap: var(--space-sm);
   padding-top: var(--space-sm);
   border-top: 1px solid var(--border-color);
+}
+
+.analysis-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.analysis-hint {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-size-aux);
+  line-height: var(--line-height-aux);
+  color: var(--text-secondary);
 }
 </style>

@@ -13,13 +13,25 @@ import AppIcon from '@/components/AppIcon.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { getSettings, updateSettings } from '@/api/setting'
 import { getNotifyLogs, testNotify } from '@/api/notify'
-import type { NotifyChannel, NotifyLogVO } from '@/api/types'
+import { getAiHealth } from '@/api/ai'
+import { useSubjectStore } from '@/stores/subject'
+import { QUESTION_TYPE_OPTIONS } from '@/utils/constants'
+import type { AiHealthVO, NotifyChannel, NotifyLogVO, PracticeSource } from '@/api/types'
 
+const subjectStore = useSubjectStore()
 const loading = ref(true)
 const saving = ref(false)
 const testing = ref(false)
 const loadError = ref('')
 const logs = ref<NotifyLogVO[]>([])
+/** AI 配置自检结果(只读);AI 生成解析依赖服务端配置 */
+const aiHealth = ref<AiHealthVO | null>(null)
+const aiStatusOk = computed(() => aiHealth.value?.configured === true)
+const aiStatusText = computed(() => {
+  if (!aiHealth.value) return '状态未知(健康检查失败)'
+  if (!aiHealth.value.configured) return '未配置,AI 生成解析会提示先配置密钥'
+  return `已配置 · ${aiHealth.value.model}`
+})
 
 const form = reactive<{
   dailyQuestionCount: number
@@ -30,6 +42,13 @@ const form = reactive<{
   reminderTime: string
   eveningReminderEnabled: boolean
   eveningReminderTime: string
+  practiceSource: PracticeSource
+  librarySubjectId: number | null
+  libraryTypes: string[]
+  libraryCount: number
+  wrongSubjectId: number | null
+  wrongTypes: string[]
+  wrongCount: number
 }>({
   dailyQuestionCount: 10,
   notifyChannel: 'WECOM',
@@ -38,7 +57,14 @@ const form = reactive<{
   reminderEnabled: true,
   reminderTime: '07:00',
   eveningReminderEnabled: true,
-  eveningReminderTime: '21:30'
+  eveningReminderTime: '21:30',
+  practiceSource: 'LIBRARY',
+  librarySubjectId: null,
+  libraryTypes: [],
+  libraryCount: 10,
+  wrongSubjectId: null,
+  wrongTypes: [],
+  wrongCount: 10
 })
 
 const isWecom = computed(() => form.notifyChannel === 'WECOM')
@@ -52,7 +78,12 @@ async function load() {
   loading.value = true
   loadError.value = ''
   try {
-    const s = await getSettings()
+    const [s, , health] = await Promise.all([
+      getSettings(),
+      subjectStore.fetchSubjects().catch(() => undefined),
+      getAiHealth().catch(() => null)
+    ])
+    aiHealth.value = health
     form.dailyQuestionCount = s.dailyQuestionCount
     form.notifyChannel = s.notifyChannel
     form.notifyWebhook = s.notifyWebhook ?? ''
@@ -61,6 +92,16 @@ async function load() {
     form.reminderTime = hhmm(s.reminderTime, '07:00')
     form.eveningReminderEnabled = s.eveningReminderEnabled
     form.eveningReminderTime = hhmm(s.eveningReminderTime, '21:30')
+    if (s.practiceDefaults) {
+      const pd = s.practiceDefaults
+      form.practiceSource = pd.source === 'WRONG' ? 'WRONG' : 'LIBRARY'
+      form.librarySubjectId = pd.librarySubjectId
+      form.libraryTypes = [...pd.libraryTypes]
+      form.libraryCount = pd.libraryCount
+      form.wrongSubjectId = pd.wrongSubjectId
+      form.wrongTypes = [...pd.wrongTypes]
+      form.wrongCount = pd.wrongCount
+    }
     logs.value = await getNotifyLogs(7)
   } catch (e) {
     loadError.value = e instanceof Error ? e.message : '加载设置失败'
@@ -70,7 +111,25 @@ async function load() {
 }
 
 function payload() {
-  return { ...form }
+  return {
+    dailyQuestionCount: form.dailyQuestionCount,
+    notifyChannel: form.notifyChannel,
+    notifyWebhook: form.notifyWebhook,
+    notifyKey: form.notifyKey,
+    reminderEnabled: form.reminderEnabled,
+    reminderTime: form.reminderTime,
+    eveningReminderEnabled: form.eveningReminderEnabled,
+    eveningReminderTime: form.eveningReminderTime,
+    practiceDefaults: {
+      source: form.practiceSource,
+      librarySubjectId: form.librarySubjectId,
+      libraryTypes: form.libraryTypes,
+      libraryCount: form.libraryCount,
+      wrongSubjectId: form.wrongSubjectId,
+      wrongTypes: form.wrongTypes,
+      wrongCount: form.wrongCount
+    }
+  }
 }
 
 async function save() {
@@ -81,6 +140,8 @@ async function save() {
     form.notifyWebhook = updated.notifyWebhook ?? ''
     form.notifyKey = updated.notifyKey ?? ''
     ElMessage.success('设置已保存')
+  } catch {
+    // 错误提示已由 request.ts 统一弹出
   } finally {
     saving.value = false
   }
@@ -99,6 +160,8 @@ async function sendTest() {
     } else {
       ElMessage.error(result.message)
     }
+  } catch {
+    // 错误提示已由 request.ts 统一弹出
   } finally {
     testing.value = false
   }
@@ -135,6 +198,113 @@ onMounted(load)
           </div>
           <p class="field__hint">今日页「开始今日 N 题」用的就是这个数量。</p>
         </div>
+      </div>
+
+      <!-- 自由练习默认设置 -->
+      <div class="card">
+        <div class="card__head"><span class="card__title">自由练习默认设置</span></div>
+        <p class="field__hint">
+          进入自由练习时自动带入下面的默认条件,不用每次重选;进去后临时改也不影响这里。
+        </p>
+
+        <div class="field-row practice-source">
+          <span class="field__label">默认题源</span>
+          <el-radio-group v-model="form.practiceSource">
+            <el-radio-button value="LIBRARY">题库</el-radio-button>
+            <el-radio-button value="WRONG">错题</el-radio-button>
+          </el-radio-group>
+        </div>
+
+        <div class="practice-defaults">
+          <section class="practice-defaults__group">
+            <h3 class="practice-defaults__title">题库</h3>
+            <div class="field">
+              <span class="field__label">默认科目</span>
+              <el-select v-model="form.librarySubjectId" placeholder="全部科目" clearable>
+                <el-option
+                  v-for="s in subjectStore.subjects"
+                  :key="s.id"
+                  :label="`${s.code} · ${s.name}`"
+                  :value="s.id"
+                />
+              </el-select>
+            </div>
+            <div class="field">
+              <span class="field__label">默认题型</span>
+              <el-select
+                v-model="form.libraryTypes"
+                multiple
+                collapse-tags
+                collapse-tags-tooltip
+                placeholder="全部题型"
+              >
+                <el-option
+                  v-for="t in QUESTION_TYPE_OPTIONS"
+                  :key="t.value"
+                  :label="t.label"
+                  :value="t.value"
+                />
+              </el-select>
+            </div>
+            <div class="field">
+              <span class="field__label">默认题量</span>
+              <el-input-number v-model="form.libraryCount" :min="1" :max="100" />
+            </div>
+          </section>
+
+          <section class="practice-defaults__group">
+            <h3 class="practice-defaults__title">错题</h3>
+            <div class="field">
+              <span class="field__label">默认科目</span>
+              <el-select v-model="form.wrongSubjectId" placeholder="全部科目" clearable>
+                <el-option
+                  v-for="s in subjectStore.subjects"
+                  :key="s.id"
+                  :label="`${s.code} · ${s.name}`"
+                  :value="s.id"
+                />
+              </el-select>
+            </div>
+            <div class="field">
+              <span class="field__label">默认题型</span>
+              <el-select
+                v-model="form.wrongTypes"
+                multiple
+                collapse-tags
+                collapse-tags-tooltip
+                placeholder="全部题型"
+              >
+                <el-option
+                  v-for="t in QUESTION_TYPE_OPTIONS"
+                  :key="t.value"
+                  :label="t.label"
+                  :value="t.value"
+                />
+              </el-select>
+            </div>
+            <div class="field">
+              <span class="field__label">默认题量</span>
+              <el-input-number v-model="form.wrongCount" :min="1" :max="100" />
+            </div>
+          </section>
+        </div>
+
+        <div class="actions">
+          <el-button type="primary" :loading="saving" @click="save">保存设置</el-button>
+        </div>
+      </div>
+
+      <!-- AI 助手状态 -->
+      <div class="card">
+        <div class="card__head"><span class="card__title">AI 助手</span></div>
+        <p class="field__hint">
+          「AI 生成解析」使用服务端配置的通义千问;密钥只存服务端(环境变量
+          DASHSCOPE_API_KEY),不会下发到浏览器。
+        </p>
+        <p class="field__hint">
+          当前状态:
+          <span :class="aiStatusOk ? 'meta-ok' : 'meta-warn'">{{ aiStatusText }}</span>
+        </p>
       </div>
 
       <!-- 提醒设置 -->
@@ -338,6 +508,40 @@ onMounted(load)
   flex-wrap: wrap;
   gap: var(--space-sm);
   margin-top: var(--space-lg);
+}
+
+.practice-source {
+  margin-top: var(--space-md);
+}
+
+.practice-defaults {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.practice-defaults__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-page);
+}
+
+.practice-defaults__title {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+@media (max-width: 767.98px) {
+  .practice-defaults {
+    grid-template-columns: 1fr;
+  }
 }
 
 .empty-slot {

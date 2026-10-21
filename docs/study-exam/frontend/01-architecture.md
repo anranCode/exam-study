@@ -93,7 +93,7 @@ frontend/
 必须实现:
 
 1. **baseURL** 通过 `import.meta.env.VITE_API_BASE` 注入,开发时为 `/api`(靠 Vite proxy 转发),生产可留空(同源)。
-2. **请求拦截器**:不做鉴权(单用户),但统一加上 `Content-Type` 与超时(15 秒)。
+2. **请求拦截器**:不做鉴权(单用户),但统一加上 `Content-Type` 与超时(默认 15 秒;AI 生成解析单次 120 秒)。
 3. **响应拦截器**:
 
    - `code === 0` → 直接返回 `data`(业务代码不必每次解包)

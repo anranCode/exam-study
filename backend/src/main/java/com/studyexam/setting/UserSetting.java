@@ -38,6 +38,30 @@ public class UserSetting {
     @Column(nullable = false)
     private Integer dailyQuestionCount = 10;
 
+    /** 自由练习默认题源:LIBRARY 题库 / WRONG 错题。 */
+    @Column(nullable = false, length = 16)
+    private String practiceSource = "LIBRARY";
+
+    /** 题库源默认科目;null 表示全部。 */
+    private Long librarySubjectId;
+
+    /** 题库源默认题型,逗号分隔的枚举名;null/空表示全部。 */
+    @Column(length = 255)
+    private String libraryTypes;
+
+    @Column(nullable = false)
+    private Integer libraryCount = 10;
+
+    /** 错题源默认科目;null 表示全部。 */
+    private Long wrongSubjectId;
+
+    /** 错题源默认题型,逗号分隔的枚举名;null/空表示全部。 */
+    @Column(length = 255)
+    private String wrongTypes;
+
+    @Column(nullable = false)
+    private Integer wrongCount = 10;
+
     /** WECOM / SERVERCHAN */
     @Column(nullable = false, length = 16)
     private String notifyChannel = "WECOM";

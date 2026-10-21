@@ -187,6 +187,8 @@
    - 晚间:`今天还没打卡,做 5 题也算 —— 已连续 6 天` + 链接 `<app-base-url>/`
 
 5. 接口:`GET /settings`、`PUT /settings`(密钥掩码处理)、`POST /notify/test`、`GET /notify/logs`。
+6. 自由练习默认设置:Flyway `V10__add_practice_defaults.sql` 增加默认题源与两个题源的
+   科目 / 题型 / 题量;`GET/PUT /settings` 的 `practiceDefaults` 读写这一组字段。
 
 **验收标准**
 
@@ -195,6 +197,7 @@
 - 故意把 Webhook 改错,发送失败不抛异常,`reminder_log` 记录了失败原因。
 - 到期题数为 0 时到点不发。
 - 当天已有 `study_log` 时,晚间提醒不发。
+- 保存「题库 → 马原 → 单项选择题 → 10 题」后,`GET /settings` 原样返回;题量越界 / 未知题型 / 不存在的科目返回 1001 / 2001。
 
 ---
 
@@ -224,7 +227,7 @@
 **要做的事**
 
 1. `AiConfig`:从配置读 DashScope API Key、base-url、模型名、超时。
-2. `PromptTemplates`:四种场景的 System Prompt 集中定义(解析 / 变式题 / 口诀 / 串讲),按「精简、考点、60 分」原则撰写;讲解类超过 120 字视为不合格输出。
+2. `PromptTemplates`:各场景的 System Prompt 集中定义(精简解析 / 主观题解析生成 / 变式题 / 口诀 / 串讲),按「精简、考点、60 分」原则撰写;讲解类超过 120 字视为不合格输出,主观题解析生成要求 120—220 字、简洁好记。
 3. `AiService`:
 
    - `explain(questionId, userAnswer, force)`:命中缓存直接返回;否则组装 Prompt(题干 + 选项 + 正确答案 + 解析 + 用户错选)调用千问,成功后把结果写入 `question.ai_analysis`。
@@ -233,7 +236,7 @@
    - `digest(subjectId, force)`:汇总该科高频考点为「必背 N 点」,写入 `ai_digest`(同科目覆盖更新)。
 
 4. 调用记录:每次真实调用写 `ai_call_log`(场景、模型、token 数、耗时、成败)。
-5. 失败处理:超时 15 秒;异常统一映射为 `code = 6001`,返回可读原因;**绝不影响练习主流程**。
+5. 失败处理:文本调用超时 45 秒;异常统一映射为 `code = 6001`,返回可读原因;**绝不影响练习主流程**。
 6. 接口:按 `03-api-spec.md` 第八节实现全部 `/ai/*`。
 
 **验收标准**

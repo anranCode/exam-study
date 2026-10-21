@@ -13,7 +13,7 @@ import java.time.Duration;
  * <p>按 docs/design/tech-stack.md 的要求,直接用 Spring 内置的 {@code RestClient} 发 POST,不引重型 SDK。
  * 你的 TokenPlan 走的是 Anthropic Messages 协议(/v1/messages + x-api-key),不是 OpenAI 的 chat/completions。两个 Bean:
  * <ul>
- *   <li>{@code qwenRestClient} —— 文本场景(解析 / 变式题 / 口诀 / 串讲),超时 15 秒;</li>
+ *   <li>{@code qwenRestClient} —— 文本场景(解析生成 / 变式题 / 口诀 / 串讲),超时 45 秒;</li>
  *   <li>{@code qwenVisionRestClient} —— 视觉场景(PDF 试卷识别),超时更宽松。</li>
  * </ul>
  *

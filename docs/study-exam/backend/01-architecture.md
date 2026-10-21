@@ -54,7 +54,7 @@ backend/
 │   ├── ai/                          # AI 辅导
 │   │   ├── AiController.java
 │   │   ├── AiService.java
-│   │   ├── PromptTemplates.java     # 四种场景的 System Prompt
+│   │   ├── PromptTemplates.java     # 各 AI 场景的 System Prompt
 │   │   └── dto/…
 │   └── setting/                     # 用户设置
 └── src/main/resources/
@@ -186,16 +186,17 @@ public void dispatch() {
 
 ### 5. AI 辅导(AiService)
 
-四种场景,统一走服务端调用千问(DashScope OpenAI 兼容接口,`RestClient` 发 POST,超时 15 秒):
+五种场景,统一走服务端调用千问(DashScope Anthropic 兼容接口,`RestClient` 发 POST,文本超时 45 秒):
 
 | 场景 | 方法 | 缓存策略 |
 |---|---|---|
 | 精简解析 | `explain(questionId, userAnswer?, force?)` | 写入 `question.ai_analysis`,命中直接返回 |
+| 题目解析生成 | `analysis(type, stem, answerPoints)` / `generateAndSave(questionId)` | 写入 `question.analysis`,不缓存,可重新生成 |
 | 变式题 | `variant(questionId)` | 不缓存(每次都出新题),不入库,返回给前端确认 |
 | 记忆口诀 | `mnemonic(knowledgePoint)` | 不缓存,前端可复制保存 |
 | 考前串讲 | `digest(subjectId, force?)` | 写入 `ai_digest`,同科目覆盖更新 |
 
-System Prompt 固定为「自考冲刺辅导老师」人设,核心约束:先点名考点 → 大白话讲对错原因 → 一句记忆提示 → 若带 `userAnswer` 则指出混淆点;讲解全文 **≤ 120 字**,不写学术引申,以 60 分及格为目标。Prompt 模板集中在 `PromptTemplates.java`,不在 Service 里拼字符串。
+System Prompt 固定为「自考冲刺辅导老师」人设,核心约束:先点名考点 → 大白话讲对错原因 → 一句记忆提示 → 若带 `userAnswer` 则指出混淆点;讲解全文 **≤ 120 字**,不写学术引申,以 60 分及格为目标。主观题解析生成用另一套人设:根据参考答案要点输出「考点 + ①②③ 采分点 + 口诀」,**120—220 字、简洁好记**。Prompt 模板集中在 `PromptTemplates.java`,不在 Service 里拼字符串。
 
 调用成功或失败都写 `ai_call_log`(场景、模型、token 数、耗时);异常统一映射为 `code = 6001`,**AI 服务故障绝不影响练习主流程**。
 

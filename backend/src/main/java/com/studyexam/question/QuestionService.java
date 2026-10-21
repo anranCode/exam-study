@@ -133,6 +133,35 @@ public class QuestionService {
         questionRepository.delete(q);
     }
 
+    /**
+     * 批量入库:把勾选的题改为 {@code PUBLISHED}。
+     *
+     * <p>已是已入库的题跳过(幂等),不存在的 ID 忽略;返回真正变更的条数。
+     * 入库后这些题才会进入练习抽题池(抽题只取 PUBLISHED)。
+     */
+    @Transactional
+    public int publish(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw BusinessException.of(ErrorCode.PARAM_INVALID, "请选择要入库的题目");
+        }
+        List<Long> wanted = ids.stream().filter(Objects::nonNull).distinct().toList();
+        if (wanted.isEmpty()) {
+            throw BusinessException.of(ErrorCode.PARAM_INVALID, "请选择要入库的题目");
+        }
+        List<Question> rows = questionRepository.findAllById(wanted);
+        int changed = 0;
+        for (Question q : rows) {
+            if (!"PUBLISHED".equals(q.getStatus())) {
+                q.setStatus("PUBLISHED");
+                changed++;
+            }
+        }
+        if (changed > 0) {
+            questionRepository.saveAll(rows);
+        }
+        return changed;
+    }
+
     @Transactional(readOnly = true)
     public List<QuestionDetailVO> random(Long subjectId, Long chapterId, int count) {
         QuestionQuery query = new QuestionQuery(subjectId, chapterId, null, null, null, "PUBLISHED");

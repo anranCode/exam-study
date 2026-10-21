@@ -22,6 +22,7 @@ public record SettingUpsertDTO(
         @Schema(description = "早间提醒时间,HH:mm", example = "07:00") LocalTime reminderTime,
         @Schema(description = "晚间未打卡提醒开关") Boolean eveningReminderEnabled,
         @Schema(description = "晚间提醒时间,HH:mm", example = "21:30") LocalTime eveningReminderTime,
-        @Schema(description = "外观:AUTO / LIGHT / DARK", example = "AUTO") String darkMode
+        @Schema(description = "外观:AUTO / LIGHT / DARK", example = "AUTO") String darkMode,
+        @Schema(description = "自由练习默认条件;null 表示不改") PracticeDefaultsUpsertDTO practiceDefaults
 ) {
 }

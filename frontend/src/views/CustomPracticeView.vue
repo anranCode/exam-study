@@ -20,7 +20,8 @@ import AppIcon from '@/components/AppIcon.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { getTypeCounts } from '@/api/question'
 import { getWrongPoolTypeCounts } from '@/api/review'
-import type { TypeCountVO } from '@/api/types'
+import { getSettings } from '@/api/setting'
+import type { PracticeDefaultsVO, TypeCountVO } from '@/api/types'
 import { useSubjectStore } from '@/stores/subject'
 
 /** 题源:题库(全部已发布题)/ 错题(错题本里未掌握的题) */
@@ -36,6 +37,10 @@ const count = ref(10)
 const typeCounts = ref<TypeCountVO[]>([])
 const loadingTypes = ref(false)
 const loadError = ref('')
+/** 设置里保存的默认条件;进入页面时自动带入 */
+const defaults = ref<PracticeDefaultsVO | null>(null)
+/** 防止慢请求覆盖新结果(换科目/题源时可能并发) */
+let loadSeq = 0
 
 const isWrong = computed(() => source.value === 'wrong')
 const totalAvailable = computed(() => typeCounts.value.reduce((a, t) => a + t.count, 0))
@@ -54,28 +59,51 @@ const actualCount = computed(() => Math.min(count.value, selectedAvailable.value
  * 题库里有的题型错题里未必有,反之亦然。
  */
 async function loadTypes() {
+  const seq = ++loadSeq
   loadingTypes.value = true
   loadError.value = ''
   try {
-    typeCounts.value = isWrong.value
+    const result = isWrong.value
       ? await getWrongPoolTypeCounts(subjectId.value ?? undefined)
       : await getTypeCounts(subjectId.value ?? undefined)
+    if (seq !== loadSeq) return
+    typeCounts.value = result
     // 换了科目/题源后,之前选的题型可能在新范围里一道题都没有
-    const available = new Set(typeCounts.value.map((t) => t.type))
+    const available = new Set(result.map((t) => t.type))
     types.value = types.value.filter((t) => available.has(t))
   } catch (e) {
+    if (seq !== loadSeq) return
     typeCounts.value = []
     types.value = []
     loadError.value = e instanceof Error ? e.message : '加载题型失败'
   } finally {
-    loadingTypes.value = false
+    if (seq === loadSeq) loadingTypes.value = false
   }
 }
 
+/**
+ * 把设置里该题源的默认科目 / 题型 / 题量带进表单。
+ *
+ * <p>科目可能已经被删掉,失效时回到「全部科目」;题型交给 loadTypes 按当前题池过滤。
+ */
+function applySourceDefaults(src: QuestionSource) {
+  const d = defaults.value
+  if (!d) return
+  const defaultSubject = src === 'wrong' ? d.wrongSubjectId : d.librarySubjectId
+  const defaultTypes = src === 'wrong' ? d.wrongTypes : d.libraryTypes
+  const defaultCount = src === 'wrong' ? d.wrongCount : d.libraryCount
+  subjectId.value =
+    defaultSubject != null && subjectStore.subjects.some((s) => s.id === defaultSubject)
+      ? defaultSubject
+      : null
+  types.value = [...(defaultTypes ?? [])]
+  count.value = Math.min(Math.max(defaultCount ?? 10, 1), 100)
+}
+
 watch(subjectId, () => void loadTypes())
-// 切题源时清掉已选题型:两个池子的题型不是同一套,留着容易筛出空结果
-watch(source, () => {
-  types.value = []
+// 切题源时带入该题源的默认条件(两个池子的题型不是同一套,不能沿用上一个题源的选择)
+watch(source, (next) => {
+  applySourceDefaults(next)
   void loadTypes()
 })
 
@@ -88,7 +116,15 @@ function start() {
 }
 
 onMounted(async () => {
-  await subjectStore.fetchSubjects().catch(() => undefined)
+  const [, settings] = await Promise.all([
+    subjectStore.fetchSubjects().catch(() => undefined),
+    getSettings().catch(() => null)
+  ])
+  defaults.value = settings?.practiceDefaults ?? null
+  if (defaults.value) {
+    source.value = defaults.value.source === 'WRONG' ? 'wrong' : 'library'
+    applySourceDefaults(source.value)
+  }
   await loadTypes()
 })
 </script>
@@ -105,6 +141,9 @@ onMounted(async () => {
         <template v-else>
           只抽「已发布」的题;没做过的题也可能再抽到。
         </template>
+      </p>
+      <p v-if="defaults" class="custom__default-hint">
+        已带入「设置 → 自由练习默认设置」里的条件,可直接开始;需要临时调整也可以改。
       </p>
     </header>
 
@@ -246,6 +285,13 @@ onMounted(async () => {
   font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.6;
+}
+
+.custom__default-hint {
+  margin: 0;
+  font-size: var(--font-size-aux);
+  line-height: var(--line-height-aux);
+  color: var(--color-success);
 }
 
 .card {

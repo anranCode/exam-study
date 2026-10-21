@@ -73,7 +73,8 @@ study-exam:
     model: ${DASHSCOPE_MODEL:qwen3.8-flash}   # TokenPlan 覆盖的模型
     # 视觉模型与文本用同一个(你的 qwen3.8-flash 本身支持视觉理解)
     vision-model: ${DASHSCOPE_VISION_MODEL:qwen3.8-flash}
-    timeout-seconds: 15
+    timeout-seconds: 45
+    # 文本调用 45 秒:AI 生成主观题解析偶尔要 20—30 秒,15 秒会把正常请求判成超时
     # 视觉识别的单次超时:整页图片大、模型思考久,给得比文本调用宽松
     vision-timeout-seconds: 180
     # PDF 识别参数

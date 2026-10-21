@@ -1,11 +1,15 @@
 package com.studyexam.question;
 
+import com.studyexam.ai.AiAnalysisService;
 import com.studyexam.common.ApiResultResponses;
 import com.studyexam.common.BusinessException;
 import com.studyexam.common.ErrorCode;
 import com.studyexam.common.PageResult;
 import com.studyexam.common.Result;
+import com.studyexam.question.dto.AiAnalysisRequest;
+import com.studyexam.question.dto.AiAnalysisVO;
 import com.studyexam.question.dto.ImportResult;
+import com.studyexam.question.dto.QuestionBatchDTO;
 import com.studyexam.question.dto.QuestionDetailVO;
 import com.studyexam.question.dto.QuestionImportRequest;
 import com.studyexam.question.dto.QuestionUpsertDTO;
@@ -37,10 +41,13 @@ public class QuestionController {
 
     private final QuestionService questionService;
     private final QuestionImportService importService;
+    private final AiAnalysisService aiAnalysisService;
 
-    public QuestionController(QuestionService questionService, QuestionImportService importService) {
+    public QuestionController(QuestionService questionService, QuestionImportService importService,
+                              AiAnalysisService aiAnalysisService) {
         this.questionService = questionService;
         this.importService = importService;
+        this.aiAnalysisService = aiAnalysisService;
     }
 
     @GetMapping
@@ -109,6 +116,34 @@ public class QuestionController {
     public Result<Void> delete(@PathVariable Long id) {
         questionService.delete(id);
         return Result.ok();
+    }
+
+    @PostMapping("/batch-publish")
+    @Operation(summary = "批量入库",
+            description = "把勾选的待校对题改为已入库(PUBLISHED);已是已入库的忽略。"
+                    + "入库后这些题会进入练习抽题池。返回实际变更的题数。")
+    @ApiResultResponses
+    public Result<Integer> batchPublish(@Valid @RequestBody QuestionBatchDTO dto) {
+        return Result.ok(questionService.publish(dto.ids()));
+    }
+
+    @PostMapping("/ai-analysis/preview")
+    @Operation(summary = "AI 生成解析(预览)",
+            description = "根据主观题的参考答案要点生成一段简洁好记的解析,**不写库**。"
+                    + "供编辑页预览:生成后填进表单,保存时随题目一起落库。")
+    @ApiResultResponses
+    public Result<AiAnalysisVO> previewAnalysis(@Valid @RequestBody AiAnalysisRequest dto) {
+        return Result.ok(new AiAnalysisVO(
+                aiAnalysisService.generate(dto.type(), dto.stem(), dto.answerPoints())));
+    }
+
+    @PostMapping("/{id}/ai-analysis")
+    @Operation(summary = "AI 生成解析并保存",
+            description = "按这道题已有的参考答案要点生成解析并写入 analysis。"
+                    + "题库列表勾选多题时由前端逐题调用。")
+    @ApiResultResponses
+    public Result<AiAnalysisVO> generateAnalysis(@PathVariable Long id) {
+        return Result.ok(new AiAnalysisVO(aiAnalysisService.generateAndSave(id)));
     }
 
     // ── 批量导入 ★ ─────────────────────────────────────────
